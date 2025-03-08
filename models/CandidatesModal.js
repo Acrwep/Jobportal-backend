@@ -1,4 +1,3 @@
-const { json } = require("express");
 const pool = require("../config/dbConfig");
 
 const candidatesModal = {
@@ -33,12 +32,13 @@ const candidatesModal = {
     linkedinURL,
     profileSummary,
     profileImage,
+    languages,
     resume,
     createdAt
   ) => {
     try {
-      const query = `INSERT INTO candidates (firstName,lastName,mobile,email,country,state,city,pincode,yearsOfExperience,monthOfExperience,companyName,designation,companyStartdate,companyEnddate,workingStatus,skills,qualification,university,graduateYear,typeOfEducation,certifications,gender,preferredJobTitles,preferredJobLocations,noticePeriod,currentCTC,expectedCTC,linkedinURL,profileSummary,profileImage,resume,createdAt) 
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+      const query = `INSERT INTO candidates (firstName,lastName,mobile,email,country,state,city,pincode,yearsOfExperience,monthOfExperience,companyName,designation,companyStartdate,companyEnddate,workingStatus,skills,qualification,university,graduateYear,typeOfEducation,certifications,gender,preferredJobTitles,preferredJobLocations,noticePeriod,currentCTC,expectedCTC,linkedinURL,profileSummary,profileImage,languages,resume,createdAt) 
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
 
       const values = [
         firstName,
@@ -56,7 +56,7 @@ const candidatesModal = {
         companyStartdate,
         companyEnddate,
         workingStatus, // Convert to string before inserting,
-        JSON.stringify(skills), // Convert to string before inserting,
+        JSON.stringify(formattedSkills), // Convert to string before inserting,
         qualification,
         university,
         graduateYear,
@@ -71,6 +71,7 @@ const candidatesModal = {
         linkedinURL,
         profileSummary,
         profileImage,
+        JSON.stringify(languages),
         resume,
         createdAt,
       ];
@@ -106,6 +107,7 @@ const candidatesModal = {
     preferredJobTitles,
     preferredJobLocations,
     linkedinURL,
+    favorites,
     page,
     limit
   ) => {
@@ -226,7 +228,10 @@ const candidatesModal = {
       conditions.push("linkedinURL LIKE ?");
       values.push(`%${linkedinURL}%`);
     }
-
+    if (favorites) {
+      conditions.push("favorites = ?");
+      values.push(favorites);
+    }
     try {
       let query = "SELECT * FROM candidates";
       let countQuery = "SELECT COUNT(*) AS total FROM candidates";
@@ -257,6 +262,7 @@ const candidatesModal = {
           companyDetails: candidate.companyDetails
             ? JSON.parse(candidate.companyDetails)
             : [],
+          languages: candidate.languages ? JSON.parse(candidate.languages) : [],
           certifications: candidate.certifications
             ? JSON.parse(candidate.certifications)
             : [],
@@ -290,6 +296,115 @@ const candidatesModal = {
       throw new Error("Error getting skills: " + error.message);
     }
   },
-};
 
+  getCandidatesById: async (candidateId) => {
+    try {
+      const query = `SELECT * FROM candidates WHERE id = ?`;
+      const values = [candidateId];
+
+      const [result] = await pool.query(query, values);
+      const [skillsList] = await pool.query("SELECT * FROM skills");
+
+      const formattedResult = result.map((candidate) => {
+        return {
+          ...candidate,
+          skills: candidate.skills
+            ? skillsList.filter((s) =>
+                JSON.parse(candidate.skills || "[]").some((can) => s.id === can)
+              )
+            : [],
+          companyDetails: candidate.companyDetails
+            ? JSON.parse(candidate.companyDetails)
+            : [],
+          certifications: candidate.certifications
+            ? JSON.parse(candidate.certifications)
+            : [],
+          preferredJobTitles: candidate.preferredJobTitles
+            ? JSON.parse(candidate.preferredJobTitles)
+            : [],
+          preferredJobLocations: candidate.preferredJobLocations
+            ? JSON.parse(candidate.preferredJobLocations)
+            : [],
+          languages: candidate.languages ? JSON.parse(candidate.languages) : [],
+        };
+      });
+      return formattedResult;
+    } catch (error) {
+      throw new Error("Error getting particulat candidate: " + error.message);
+    }
+  },
+
+  getMultipleCandidatesbyId: async (candidateIds) => {
+    try {
+      const ids = candidateIds.map(() => "?").join(",");
+      const query = `SELECT * FROM candidates WHERE id IN (${ids})`;
+      const values = candidateIds;
+
+      const [result] = await pool.query(query, values);
+      const [skillsList] = await pool.query("SELECT * FROM skills");
+
+      const formattedResult = result.map((candidate) => {
+        return {
+          ...candidate,
+          skills: candidate.skills
+            ? skillsList.filter((s) =>
+                JSON.parse(candidate.skills || "[]").some((can) => s.id === can)
+              )
+            : [],
+          companyDetails: candidate.companyDetails
+            ? JSON.parse(candidate.companyDetails)
+            : [],
+          certifications: candidate.certifications
+            ? JSON.parse(candidate.certifications)
+            : [],
+          preferredJobTitles: candidate.preferredJobTitles
+            ? JSON.parse(candidate.preferredJobTitles)
+            : [],
+          preferredJobLocations: candidate.preferredJobLocations
+            ? JSON.parse(candidate.preferredJobLocations)
+            : [],
+          languages: candidate.languages ? JSON.parse(candidate.languages) : [],
+        };
+      });
+      return formattedResult;
+    } catch (error) {
+      throw new Error("Error getting multiple candidates: " + error.message);
+    }
+  },
+
+  updateCandidateFavorites: async (favoriteStatus, candidateId) => {
+    try {
+      const query = "UPDATE candidates SET favorites = ? WHERE id = ?";
+      const values = [favoriteStatus, candidateId];
+      console.log("favorites values", values);
+      const [result] = await pool.query(query, values);
+      return result;
+    } catch (error) {
+      throw new Error("Error update favorites: " + error.message);
+    }
+  },
+
+  createFolder: async (name, candidateIds) => {
+    try {
+      const query = `INSERT INTO folders (name,candidateIds) 
+    VALUES (?,?)`;
+
+      const values = [name, JSON.stringify(candidateIds)];
+
+      const [result] = await pool.query(query, values);
+      return result;
+    } catch (error) {
+      throw new Error("Error inserting folders: " + error.message);
+    }
+  },
+
+  getFolders: async () => {
+    try {
+      const [result] = await pool.query("SELECT * FROM folders");
+      return result;
+    } catch (error) {
+      throw new Error("Error getting folders: " + error.message);
+    }
+  },
+};
 module.exports = candidatesModal;

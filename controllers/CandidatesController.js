@@ -33,6 +33,7 @@ const registerCandidate = async (request, response) => {
     linkedinURL,
     profileSummary,
     profileImage,
+    languages,
     resume,
     createdAt,
   } = request.body;
@@ -41,6 +42,7 @@ const registerCandidate = async (request, response) => {
   const formattedCertificateDetails = Array.isArray(certifications)
     ? certifications
     : [certifications];
+  const formattedLanguages = Array.isArray(languages) ? languages : [languages];
   const formattedJobtitles = Array.isArray(preferredJobTitles)
     ? preferredJobTitles
     : [preferredJobTitles];
@@ -81,6 +83,7 @@ const registerCandidate = async (request, response) => {
       linkedinURL,
       profileSummary,
       profileImage,
+      formattedLanguages,
       resume,
       createdAt
     );
@@ -118,6 +121,7 @@ const getCandidates = async (request, response) => {
     preferredJobTitles,
     preferredJobLocations,
     linkedinURL,
+    favorites,
     page,
     limit,
   } = request.query;
@@ -147,6 +151,7 @@ const getCandidates = async (request, response) => {
       preferredJobTitles,
       preferredJobLocations,
       linkedinURL,
+      favorites,
       parseInt(page) || 1,
       parseInt(limit) || 10
     );
@@ -156,6 +161,40 @@ const getCandidates = async (request, response) => {
   } catch (error) {
     response.status(500).send({
       message: "error while getting candidates",
+      details: error.message,
+    });
+  }
+};
+
+const getCandidateById = async (request, response) => {
+  const { id } = request.query;
+
+  try {
+    const result = await candidatesModal.getCandidatesById(id);
+    response
+      .status(200)
+      .send({ message: "candidate data fetched", data: result });
+  } catch (error) {
+    response.status(500).send({
+      message: "error while getting candidate",
+      details: error.message,
+    });
+  }
+};
+
+const getMultipleCandidatesbyId = async (request, response) => {
+  const { candidateIds } = request.query;
+
+  try {
+    const result = await candidatesModal.getMultipleCandidatesbyId(
+      candidateIds
+    );
+    response
+      .status(200)
+      .send({ message: "candidates data fetched", data: result });
+  } catch (error) {
+    response.status(500).send({
+      message: "error while getting multiple candidates",
       details: error.message,
     });
   }
@@ -173,4 +212,62 @@ const getSkills = async (request, response) => {
       .send({ message: "error while getting skills", details: error.message });
   }
 };
-module.exports = { registerCandidate, getCandidates, getSkills };
+
+const updateCandidateFavorites = async (request, response) => {
+  const { favoriteStatus, id } = request.body;
+  try {
+    const result = await candidatesModal.updateCandidateFavorites(
+      favoriteStatus,
+      id
+    );
+    response.status(200).send({ message: "Favorites updated", data: result });
+  } catch (error) {
+    response.status(500).send({
+      message: "error while update favorites",
+      details: error.message,
+    });
+  }
+};
+
+const createFolder = async (request, response) => {
+  const { name, candidateIds } = request.body;
+
+  const formattedCandidateIds = Array.isArray(candidateIds)
+    ? candidateIds
+    : [candidateIds];
+
+  try {
+    await candidatesModal.createFolder(name, formattedCandidateIds);
+    response.status(201).send({ message: "Folder created successful!" });
+  } catch (error) {
+    console.log("controller error", error);
+    response
+      .status(500)
+      .send({ message: "error while create folder", details: error.message });
+  }
+};
+
+const getFolders = async (request, response) => {
+  try {
+    const result = await candidatesModal.getFolders();
+    response
+      .status(200)
+      .send({ message: "folders fetched successfully", data: result });
+  } catch (error) {
+    response.status(500).send({
+      message: "error while getting folders",
+      details: error.message,
+    });
+  }
+};
+
+module.exports = {
+  registerCandidate,
+  getCandidates,
+  getCandidateById,
+  getSkills,
+  updateCandidateFavorites,
+  createFolder,
+  getFolders,
+  getMultipleCandidatesbyId,
+};

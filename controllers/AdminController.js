@@ -14,6 +14,7 @@ const login = async (request, response) => {
         message: "Login successfully!",
         details: {
           id: result[0].id,
+          name: result[0].name,
           email: result[0].email,
           token: Token,
         },

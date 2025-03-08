@@ -10,6 +10,14 @@ router.get("/getStudents", verifyToken, StudentsController.getStudents);
 router.post("/adminlogin", AdminController.login);
 router.post("/registration", candidateController.registerCandidate);
 router.get("/getCandidates", candidateController.getCandidates);
+router.get("/getCandidateById", candidateController.getCandidateById);
+router.get(
+  "/getMultipleCandidatesById",
+  candidateController.getMultipleCandidatesbyId
+);
 router.get("/getSkills", candidateController.getSkills);
+router.put("/updateFavorites", candidateController.updateCandidateFavorites);
+router.post("/createfolder", candidateController.createFolder);
+router.get("/getfolders", candidateController.getFolders);
 
 module.exports = router;
