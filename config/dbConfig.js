@@ -10,6 +10,7 @@ const pool = mysql.createPool({
   connectTimeout: 60000, // Increase timeout to 60 seconds
   acquireTimeout: 60000, // Increase acquire timeout
   queueLimit: 0,
+  timezone: "Asia/Kolkata",
 });
 
 module.exports = pool;

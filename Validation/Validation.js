@@ -1,5 +1,16 @@
 const jwt = require("jsonwebtoken");
 
+const convertUTCDateToLocalDate = (date) => {
+  var newDate = new Date(date.getTime() + date.getTimezoneOffset() * 60 * 1000);
+
+  var offset = date.getTimezoneOffset() / 60;
+  var hours = date.getHours();
+
+  newDate.setHours(hours - offset);
+
+  return newDate;
+};
+
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1]; // Extract Bearer token
@@ -22,4 +33,5 @@ const verifyToken = (req, res, next) => {
 
 module.exports = {
   verifyToken,
+  convertUTCDateToLocalDate,
 };

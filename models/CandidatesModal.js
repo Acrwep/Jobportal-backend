@@ -1,4 +1,5 @@
 const pool = require("../config/dbConfig");
+const { convertUTCDateToLocalDate } = require("../Validation/Validation");
 
 const candidatesModal = {
   registerCandidate: async (
@@ -34,11 +35,57 @@ const candidatesModal = {
     profileImage,
     languages,
     resume,
+    courseName,
+    courseLocation,
+    courseMode,
+    courseStatus,
+    mockupPercentage,
+    courseJoiningDate,
     createdAt
   ) => {
     try {
-      const query = `INSERT INTO candidates (firstName,lastName,mobile,email,country,state,city,pincode,yearsOfExperience,monthOfExperience,companyName,designation,companyStartdate,companyEnddate,workingStatus,skills,qualification,university,graduateYear,typeOfEducation,certifications,gender,preferredJobTitles,preferredJobLocations,noticePeriod,currentCTC,expectedCTC,linkedinURL,profileSummary,profileImage,languages,resume,createdAt) 
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+      const query = `INSERT INTO candidates (
+    firstName,
+    lastName,
+    mobile,
+    email,
+    country,
+    state,
+    city,
+    pincode,
+    yearsOfExperience,
+    monthOfExperience,
+    companyName,
+    designation,
+    companyStartdate,
+    companyEnddate,
+    workingStatus,
+    skills,
+    qualification,
+    university,
+    graduateYear,
+    typeOfEducation,
+    certifications,
+    gender,
+    preferredJobTitles,
+    preferredJobLocations,
+    noticePeriod,
+    currentCTC,
+    expectedCTC,
+    linkedinURL,
+    profileSummary,
+    profileImage,
+    languages,
+    resume,
+    courseName,
+    courseLocation,
+    courseMode,
+    courseStatus,
+    mockupPercentage,
+    courseJoiningDate,
+    createdAt
+) 
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
 
       const values = [
         firstName,
@@ -56,7 +103,7 @@ const candidatesModal = {
         companyStartdate,
         companyEnddate,
         workingStatus, // Convert to string before inserting,
-        JSON.stringify(formattedSkills), // Convert to string before inserting,
+        JSON.stringify(skills), // Convert to string before inserting,
         qualification,
         university,
         graduateYear,
@@ -73,6 +120,12 @@ const candidatesModal = {
         profileImage,
         JSON.stringify(languages),
         resume,
+        courseName,
+        courseLocation,
+        courseMode,
+        courseStatus,
+        mockupPercentage,
+        courseJoiningDate,
         createdAt,
       ];
 
@@ -288,15 +341,6 @@ const candidatesModal = {
     }
   },
 
-  getSkills: async () => {
-    try {
-      const [result] = await pool.query("SELECT * FROM skills");
-      return result;
-    } catch (error) {
-      throw new Error("Error getting skills: " + error.message);
-    }
-  },
-
   getCandidatesById: async (candidateId) => {
     try {
       const query = `SELECT * FROM candidates WHERE id = ?`;
@@ -369,41 +413,6 @@ const candidatesModal = {
       return formattedResult;
     } catch (error) {
       throw new Error("Error getting multiple candidates: " + error.message);
-    }
-  },
-
-  updateCandidateFavorites: async (favoriteStatus, candidateId) => {
-    try {
-      const query = "UPDATE candidates SET favorites = ? WHERE id = ?";
-      const values = [favoriteStatus, candidateId];
-      console.log("favorites values", values);
-      const [result] = await pool.query(query, values);
-      return result;
-    } catch (error) {
-      throw new Error("Error update favorites: " + error.message);
-    }
-  },
-
-  createFolder: async (name, candidateIds) => {
-    try {
-      const query = `INSERT INTO folders (name,candidateIds) 
-    VALUES (?,?)`;
-
-      const values = [name, JSON.stringify(candidateIds)];
-
-      const [result] = await pool.query(query, values);
-      return result;
-    } catch (error) {
-      throw new Error("Error inserting folders: " + error.message);
-    }
-  },
-
-  getFolders: async () => {
-    try {
-      const [result] = await pool.query("SELECT * FROM folders");
-      return result;
-    } catch (error) {
-      throw new Error("Error getting folders: " + error.message);
     }
   },
 };

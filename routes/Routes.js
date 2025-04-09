@@ -6,6 +6,7 @@ const candidateController = require("../controllers/CandidatesController");
 const { verifyToken } = require("../Validation/Validation");
 
 router.post("/createStudent", StudentsController.createStudents);
+router.get("/searchByKeyword", AdminController.searchbyKeyword);
 router.get("/getStudents", verifyToken, StudentsController.getStudents);
 router.post("/adminlogin", AdminController.login);
 router.post("/registration", candidateController.registerCandidate);
@@ -15,9 +16,13 @@ router.get(
   "/getMultipleCandidatesById",
   candidateController.getMultipleCandidatesbyId
 );
-router.get("/getSkills", candidateController.getSkills);
-router.put("/updateFavorites", candidateController.updateCandidateFavorites);
-router.post("/createfolder", candidateController.createFolder);
-router.get("/getfolders", candidateController.getFolders);
+router.put("/updateFavorites", AdminController.updateCandidateFavorites);
+router.post("/createfolder", AdminController.createFolder);
+router.put("/updatefolder", AdminController.updateFolder);
+router.get("/getfolders", AdminController.getFolders);
+router.post("/createFavorites", AdminController.createFavorites);
+router.delete("/removeFavorites", AdminController.removeFavorites);
+router.get("/getFavorites", AdminController.getFavorites);
+router.get("/getFavoriteCandidates", AdminController.getFavoriteCandidates);
 
 module.exports = router;

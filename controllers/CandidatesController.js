@@ -35,6 +35,12 @@ const registerCandidate = async (request, response) => {
     profileImage,
     languages,
     resume,
+    courseName,
+    courseLocation,
+    courseMode,
+    courseStatus,
+    mockupPercentage,
+    courseJoiningDate,
     createdAt,
   } = request.body;
 
@@ -85,6 +91,12 @@ const registerCandidate = async (request, response) => {
       profileImage,
       formattedLanguages,
       resume,
+      courseName,
+      courseLocation,
+      courseMode,
+      courseStatus,
+      mockupPercentage,
+      courseJoiningDate,
       createdAt
     );
     response.status(201).send({ message: "Registration successful!" });
@@ -98,6 +110,7 @@ const registerCandidate = async (request, response) => {
 
 const getCandidates = async (request, response) => {
   const {
+    userId,
     firstName,
     lastName,
     mobile,
@@ -200,74 +213,9 @@ const getMultipleCandidatesbyId = async (request, response) => {
   }
 };
 
-const getSkills = async (request, response) => {
-  try {
-    const result = await candidatesModal.getSkills();
-    response
-      .status(200)
-      .send({ message: "skills fetched successfully", data: result });
-  } catch (error) {
-    response
-      .status(500)
-      .send({ message: "error while getting skills", details: error.message });
-  }
-};
-
-const updateCandidateFavorites = async (request, response) => {
-  const { favoriteStatus, id } = request.body;
-  try {
-    const result = await candidatesModal.updateCandidateFavorites(
-      favoriteStatus,
-      id
-    );
-    response.status(200).send({ message: "Favorites updated", data: result });
-  } catch (error) {
-    response.status(500).send({
-      message: "error while update favorites",
-      details: error.message,
-    });
-  }
-};
-
-const createFolder = async (request, response) => {
-  const { name, candidateIds } = request.body;
-
-  const formattedCandidateIds = Array.isArray(candidateIds)
-    ? candidateIds
-    : [candidateIds];
-
-  try {
-    await candidatesModal.createFolder(name, formattedCandidateIds);
-    response.status(201).send({ message: "Folder created successful!" });
-  } catch (error) {
-    console.log("controller error", error);
-    response
-      .status(500)
-      .send({ message: "error while create folder", details: error.message });
-  }
-};
-
-const getFolders = async (request, response) => {
-  try {
-    const result = await candidatesModal.getFolders();
-    response
-      .status(200)
-      .send({ message: "folders fetched successfully", data: result });
-  } catch (error) {
-    response.status(500).send({
-      message: "error while getting folders",
-      details: error.message,
-    });
-  }
-};
-
 module.exports = {
   registerCandidate,
   getCandidates,
   getCandidateById,
-  getSkills,
-  updateCandidateFavorites,
-  createFolder,
-  getFolders,
   getMultipleCandidatesbyId,
 };

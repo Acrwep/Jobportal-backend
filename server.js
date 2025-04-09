@@ -9,7 +9,7 @@ app.use(express.json({ limit: "50mb" }));
 // Enable CORS if your frontend is running on a different port, like 3001
 app.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: ["http://localhost:3001", "https://placement.acte.in"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
