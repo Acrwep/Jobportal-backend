@@ -347,16 +347,11 @@ const candidatesModal = {
       const values = [candidateId];
 
       const [result] = await pool.query(query, values);
-      const [skillsList] = await pool.query("SELECT * FROM skills");
 
       const formattedResult = result.map((candidate) => {
         return {
           ...candidate,
-          skills: candidate.skills
-            ? skillsList.filter((s) =>
-                JSON.parse(candidate.skills || "[]").some((can) => s.id === can)
-              )
-            : [],
+          skills: candidate.skills ? JSON.parse(candidate.skills) : [],
           companyDetails: candidate.companyDetails
             ? JSON.parse(candidate.companyDetails)
             : [],
@@ -385,16 +380,11 @@ const candidatesModal = {
       const values = candidateIds;
 
       const [result] = await pool.query(query, values);
-      const [skillsList] = await pool.query("SELECT * FROM skills");
 
       const formattedResult = result.map((candidate) => {
         return {
           ...candidate,
-          skills: candidate.skills
-            ? skillsList.filter((s) =>
-                JSON.parse(candidate.skills || "[]").some((can) => s.id === can)
-              )
-            : [],
+          skills: candidate.skills ? JSON.parse(candidate.skills) : [],
           companyDetails: candidate.companyDetails
             ? JSON.parse(candidate.companyDetails)
             : [],

@@ -283,6 +283,22 @@ const getFolders = async (request, response) => {
   }
 };
 
+const deleteFolder = async (request, response) => {
+  const { folderId } = request.query;
+
+  try {
+    const result = await adminModal.deleteFolder(folderId);
+    response
+      .status(200)
+      .send({ message: "folders deleted successfully", data: result });
+  } catch (error) {
+    response.status(500).send({
+      message: "error while deleting folders",
+      details: error,
+    });
+  }
+};
+
 module.exports = {
   login,
   searchbyKeyword,
@@ -294,4 +310,5 @@ module.exports = {
   createFolder,
   updateFolder,
   getFolders,
+  deleteFolder,
 };

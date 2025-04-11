@@ -1,28 +1,43 @@
 const express = require("express");
 const router = express.Router();
-const StudentsController = require("../controllers/StudentsController");
 const AdminController = require("../controllers/AdminController");
 const candidateController = require("../controllers/CandidatesController");
 const { verifyToken } = require("../Validation/Validation");
 
-router.post("/createStudent", StudentsController.createStudents);
-router.get("/searchByKeyword", AdminController.searchbyKeyword);
-router.get("/getStudents", verifyToken, StudentsController.getStudents);
-router.post("/adminlogin", AdminController.login);
+//candidateController apis
 router.post("/registration", candidateController.registerCandidate);
-router.get("/getCandidates", candidateController.getCandidates);
-router.get("/getCandidateById", candidateController.getCandidateById);
+//AdminController apis
+router.post("/adminlogin", AdminController.login);
+router.get("/searchByKeyword", verifyToken, AdminController.searchbyKeyword);
+router.get("/getCandidates", verifyToken, candidateController.getCandidates);
+router.get(
+  "/getCandidateById",
+  verifyToken,
+  candidateController.getCandidateById
+);
 router.get(
   "/getMultipleCandidatesById",
+  verifyToken,
   candidateController.getMultipleCandidatesbyId
 );
-router.put("/updateFavorites", AdminController.updateCandidateFavorites);
-router.post("/createfolder", AdminController.createFolder);
-router.put("/updatefolder", AdminController.updateFolder);
-router.get("/getfolders", AdminController.getFolders);
-router.post("/createFavorites", AdminController.createFavorites);
-router.delete("/removeFavorites", AdminController.removeFavorites);
-router.get("/getFavorites", AdminController.getFavorites);
-router.get("/getFavoriteCandidates", AdminController.getFavoriteCandidates);
+
+router.post("/createFavorites", verifyToken, AdminController.createFavorites);
+router.put(
+  "/updateFavorites",
+  verifyToken,
+  AdminController.updateCandidateFavorites
+);
+router.get("/getFavorites", verifyToken, AdminController.getFavorites);
+router.delete("/removeFavorites", verifyToken, AdminController.removeFavorites);
+
+router.post("/createfolder", verifyToken, AdminController.createFolder);
+router.put("/updatefolder", verifyToken, AdminController.updateFolder);
+router.get("/getfolders", verifyToken, AdminController.getFolders);
+router.delete("/deletefolder", verifyToken, AdminController.deleteFolder);
+router.get(
+  "/getFavoriteCandidates",
+  verifyToken,
+  AdminController.getFavoriteCandidates
+);
 
 module.exports = router;

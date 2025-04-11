@@ -72,7 +72,7 @@ const adminModal = {
             `currentCTC LIKE '%${word}%'`,
             `linkedinURL LIKE '%${word}%'`,
             `languages LIKE '%${word}%'`,
-            `skills LIKE '%${word}%'`,
+            `LOWER(skills) LIKE '%${word}%'`,
           ];
 
           // Exact match only for gender
@@ -96,8 +96,14 @@ const adminModal = {
       if (state) filters.push(`state = '${state}'`);
       if (city) filters.push(`city = '${city}'`);
       if (gender) filters.push(`gender = '${gender}'`);
-      if (skills)
-        filters.push(`LOWER(skills) LIKE '%${skills.toLowerCase()}%'`);
+      if (Array.isArray(skills) && skills.length > 0) {
+        const skillFilters = skills.map((skill) => {
+          const lowerSkill = skill.toLowerCase();
+          return `LOWER(skills) LIKE '%"${lowerSkill}"%'`;
+        });
+        filters.push(`(${skillFilters.join(" AND ")})`);
+      }
+
       if (yearsOfExperience)
         filters.push(`yearsOfExperience = '${yearsOfExperience}'`);
       if (monthOfExperience)
@@ -244,6 +250,7 @@ const adminModal = {
   ) => {
     let conditions = ["f.userId = ?"]; // Ensure we only get favorite candidates for this user
     let values = [userId]; // Store userId first
+    console.log("favoritess", skills);
 
     if (firstName) {
       conditions.push("c.firstName LIKE ?");
@@ -300,9 +307,12 @@ const adminModal = {
       values.push(`%${companyDetails}%`);
     }
 
-    if (skills) {
-      conditions.push("c.skills LIKE ?");
-      values.push(`%${skills}%`);
+    if (Array.isArray(skills) && skills.length > 0) {
+      const skillConditions = skills.map(() => `LOWER(c.skills) LIKE ?`);
+      conditions.push(`(${skillConditions.join(" AND ")})`);
+      skills.forEach((skill) => {
+        values.push(`%"${skill.toLowerCase()}"%`);
+      });
     }
 
     if (qualification) {
@@ -384,7 +394,6 @@ const adminModal = {
       const [result] = await pool.query(query, values);
       const [[{ total }]] = await pool.query(countQuery, values.slice(0, -2)); // Remove pagination values
 
-      const [skillsList] = await pool.query("SELECT * FROM skills");
       const formattedResult = result.map((candidate) => {
         return {
           ...candidate,
@@ -455,11 +464,24 @@ const adminModal = {
 
       const folders = result.map((folder) => ({
         ...folder,
-        createdAt: convertUTCDateToLocalDate(folder.createdAt),
+        createdAt: folder.createdAt,
       }));
       return folders;
     } catch (error) {
       throw new Error("Error getting folders: " + error.message);
+    }
+  },
+
+  deleteFolder: async (folderId) => {
+    try {
+      const query = `DELETE FROM folders WHERE id = ?`;
+      const values = [folderId];
+      const result = await pool.query(query, values);
+      console.log("delete result", result);
+      return result;
+    } catch (error) {
+      console.log("delete folder error", error);
+      throw new Error("Error while deleting folder:", +error.message);
     }
   },
 };

@@ -11,6 +11,7 @@ const pool = mysql.createPool({
   acquireTimeout: 60000, // Increase acquire timeout
   queueLimit: 0,
   timezone: "Asia/Kolkata",
+  dateStrings: true, // prevents JS from converting DATETIME to UTC
 });
 
 module.exports = pool;
