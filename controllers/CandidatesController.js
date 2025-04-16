@@ -213,9 +213,29 @@ const getMultipleCandidatesbyId = async (request, response) => {
   }
 };
 
+const updateEligibleCandidate = async (request, response) => {
+  const { eligibleStatus, candidateId } = request.body;
+
+  try {
+    const result = await candidatesModal.updateEligibleCandidate(
+      eligibleStatus,
+      candidateId
+    );
+    response
+      .status(200)
+      .send({ message: "updated successfully", data: result });
+  } catch (error) {
+    response.status(500).send({
+      message: "error while updating candidate",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerCandidate,
   getCandidates,
   getCandidateById,
   getMultipleCandidatesbyId,
+  updateEligibleCandidate,
 };

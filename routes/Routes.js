@@ -20,7 +20,11 @@ router.get(
   verifyToken,
   candidateController.getMultipleCandidatesbyId
 );
-
+router.put(
+  "/updateEligibleCandidate",
+  verifyToken,
+  candidateController.updateEligibleCandidate
+);
 router.post("/createFavorites", verifyToken, AdminController.createFavorites);
 router.put(
   "/updateFavorites",

@@ -405,5 +405,17 @@ const candidatesModal = {
       throw new Error("Error getting multiple candidates: " + error.message);
     }
   },
+
+  updateEligibleCandidate: async (eligibleStatus, candidateId) => {
+    try {
+      const query = `UPDATE candidates SET eligibleCandidates = ? WHERE id = ?;`;
+      const values = [eligibleStatus, candidateId];
+
+      const [result] = await pool.query(query, values);
+      return result;
+    } catch (error) {
+      throw new Error("Error updating candidate: " + error.message);
+    }
+  },
 };
 module.exports = candidatesModal;

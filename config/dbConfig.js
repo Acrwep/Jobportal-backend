@@ -5,7 +5,7 @@ const pool = mysql.createPool({
   host: "localhost",
   user: "root",
   password: "",
-  database: "jobportal",
+  database: "acteplacement",
   waitForConnections: true,
   connectTimeout: 60000, // Increase timeout to 60 seconds
   acquireTimeout: 60000, // Increase acquire timeout

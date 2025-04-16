@@ -38,8 +38,8 @@ const adminModal = {
         linkedinURL,
         courseName,
         courseLocation,
-        courseMode,
         courseStatus,
+        eligibleStatus,
         startJoingingDate,
         endJoiningDate,
         page,
@@ -86,7 +86,6 @@ const adminModal = {
           );
         });
       }
-
       // Additional filters
       if (firstName) filters.push(`firstName LIKE '%${firstName}'`);
       if (lastName) filters.push(`lastName LIKE '%${lastName}'`);
@@ -118,11 +117,17 @@ const adminModal = {
       if (currentCTC) filters.push(`currentCTC LIKE '%${currentCTC}%'`);
       if (linkedinURL) filters.push(`linkedinURL LIKE '%${linkedinURL}%'`);
 
-      if (courseName) filters.push(`courseName LIKE '%${courseName}%'`);
-      if (courseLocation)
-        filters.push(`courseLocation LIKE '%${courseLocation}'`);
-      if (courseMode) filters.push(`courseMode LIKE '%${courseMode}'`);
+      if (courseName) filters.push(`courseName = '${courseName}'`);
+      if (Array.isArray(courseLocation) && courseLocation.length > 0) {
+        const courseLocationFilters = courseLocation.map((location) => {
+          const lowerCourseLocation = location.toLowerCase();
+          return `LOWER(courseLocation) LIKE '%"${lowerCourseLocation}"%'`;
+        });
+        filters.push(`(${courseLocationFilters.join(" AND ")})`);
+      }
       if (courseStatus) filters.push(`courseStatus LIKE '%${courseStatus}'`);
+      if (eligibleStatus)
+        filters.push(`eligibleCandidates = '${eligibleStatus}'`);
       if (startJoingingDate && endJoiningDate)
         filters.push(
           `courseJoiningDate BETWEEN '${startJoingingDate}' AND '${endJoiningDate}'`
