@@ -373,13 +373,174 @@ const candidatesModal = {
     }
   },
 
-  getMultipleCandidatesbyId: async (candidateIds) => {
+  getMultipleCandidatesbyId: async (
+    candidateIds,
+    firstName,
+    lastName,
+    mobile,
+    email,
+    country,
+    state,
+    city,
+    pincode,
+    yearsOfExperience,
+    monthOfExperience,
+    companyDetails,
+    skills,
+    qualification,
+    university,
+    graduateYear,
+    gender,
+    companyName,
+    designation,
+    noticePeriod,
+    currentCTC,
+    preferredJobTitles,
+    preferredJobLocations,
+    linkedinURL,
+    page,
+    limit
+  ) => {
     try {
-      const ids = candidateIds.map(() => "?").join(",");
-      const query = `SELECT * FROM candidates WHERE id IN (${ids})`;
-      const values = candidateIds;
+      let conditions = [];
+      let values = [];
 
+      const ids = candidateIds.map(() => "?").join(",");
+      values.push(...candidateIds);
+
+      if (firstName) {
+        conditions.push("firstName LIKE ?");
+        values.push(`%${firstName}%`);
+      }
+
+      if (lastName) {
+        conditions.push("lastName LIKE ?");
+        values.push(`%${lastName}%`);
+      }
+
+      if (mobile) {
+        conditions.push("mobile = ?");
+        values.push(mobile);
+      }
+
+      if (email) {
+        conditions.push("email LIKE ?");
+        values.push(`%${email}%`);
+      }
+
+      if (country) {
+        conditions.push("country LIKE ?");
+        values.push(`%${country}%`);
+      }
+
+      if (city) {
+        conditions.push("city LIKE ?");
+        values.push(`%${city}%`);
+      }
+
+      if (state) {
+        conditions.push("state LIKE ?");
+        values.push(`%${state}%`);
+      }
+
+      if (pincode) {
+        conditions.push("pincode LIKE ?");
+        values.push(`%${pincode}%`);
+      }
+
+      if (yearsOfExperience) {
+        conditions.push("yearsOfExperience LIKE ?");
+        values.push(`%${yearsOfExperience}%`);
+      }
+
+      if (monthOfExperience) {
+        conditions.push("monthOfExperience LIKE ?");
+        values.push(`%${monthOfExperience}%`);
+      }
+
+      if (companyDetails) {
+        conditions.push("companyDetails LIKE ?");
+        values.push(`%${companyDetails}%`);
+      }
+
+      if (Array.isArray(skills) && skills.length > 0) {
+        const skillConditions = skills.map(() => `LOWER(skills) LIKE ?`);
+        conditions.push(`(${skillConditions.join(" AND ")})`);
+        skills.forEach((skill) => {
+          values.push(`%"${skill.toLowerCase()}"%`);
+        });
+      }
+
+      if (qualification) {
+        conditions.push("qualification LIKE ?");
+        values.push(`%${qualification}%`);
+      }
+      if (university) {
+        conditions.push("university LIKE ?");
+        values.push(`%${university}%`);
+      }
+      if (graduateYear) {
+        conditions.push("graduateYear LIKE ?");
+        values.push(`%${graduateYear}%`);
+      }
+      if (gender) {
+        conditions.push("gender = ?");
+        values.push(gender);
+      }
+      if (companyName) {
+        conditions.push("companyName LIKE ?");
+        values.push(`%${companyName}%`);
+      }
+      if (designation) {
+        conditions.push("designation LIKE ?");
+        values.push(`%${designation}%`);
+      }
+      if (noticePeriod) {
+        conditions.push("noticePeriod LIKE ?");
+        values.push(`%${noticePeriod}%`);
+      }
+      if (currentCTC) {
+        conditions.push("currentCTC = ?");
+        values.push(currentCTC);
+      }
+      if (preferredJobTitles) {
+        conditions.push(
+          "JSON_SEARCH(preferredJobTitles, 'all', ?) IS NOT NULL"
+        );
+        values.push(`%${preferredJobTitles}%`);
+      }
+      if (preferredJobLocations) {
+        conditions.push(
+          "JSON_SEARCH(preferredJobLocations, 'all', ?) IS NOT NULL"
+        );
+        values.push(`%${preferredJobLocations}%`);
+      }
+      if (linkedinURL) {
+        conditions.push("linkedinURL LIKE ?");
+        values.push(`%${linkedinURL}%`);
+      }
+
+      let query = `SELECT * FROM candidates WHERE id IN (${ids})`;
+
+      let countQuery = `SELECT COUNT(*) AS total FROM candidates WHERE id IN (${ids})`;
+
+      if (conditions.length > 0) {
+        const whereClause = " AND " + conditions.join(" AND ");
+        query += whereClause;
+        countQuery += whereClause;
+      }
+
+      // Pagination logic
+      const pageNumber = parseInt(page, 10) || 1;
+      const limitNumber = parseInt(limit, 10) || 10;
+      const offset = (pageNumber - 1) * limitNumber;
+
+      query += " LIMIT ? OFFSET ?";
+      values.push(limitNumber, offset);
+
+      // Execute the queries
       const [result] = await pool.query(query, values);
+      const [[{ total }]] = await pool.query(countQuery, values.slice(0, -2)); // Remove pagination values
 
       const formattedResult = result.map((candidate) => {
         return {
@@ -400,8 +561,17 @@ const candidatesModal = {
           languages: candidate.languages ? JSON.parse(candidate.languages) : [],
         };
       });
-      return formattedResult;
+      return {
+        data: formattedResult,
+        pagination: {
+          total,
+          page: parseInt(pageNumber),
+          limit: parseInt(limitNumber),
+          totalPages: Math.ceil(total / limitNumber),
+        },
+      };
     } catch (error) {
+      console.log("multiple candidates error", error);
       throw new Error("Error getting multiple candidates: " + error.message);
     }
   },

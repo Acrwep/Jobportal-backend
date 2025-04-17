@@ -196,11 +196,63 @@ const getCandidateById = async (request, response) => {
 };
 
 const getMultipleCandidatesbyId = async (request, response) => {
-  const { candidateIds } = request.query;
+  const {
+    candidateIds,
+    firstName,
+    lastName,
+    mobile,
+    email,
+    country,
+    state,
+    city,
+    pincode,
+    yearsOfExperience,
+    monthOfExperience,
+    companyDetails,
+    skills,
+    qualification,
+    university,
+    graduateYear,
+    gender,
+    companyName,
+    designation,
+    noticePeriod,
+    currentCTC,
+    preferredJobTitles,
+    preferredJobLocations,
+    linkedinURL,
+    page,
+    limit,
+  } = request.query;
 
   try {
     const result = await candidatesModal.getMultipleCandidatesbyId(
-      candidateIds
+      candidateIds,
+      firstName,
+      lastName,
+      mobile,
+      email,
+      country,
+      state,
+      city,
+      pincode,
+      yearsOfExperience,
+      monthOfExperience,
+      companyDetails,
+      skills,
+      qualification,
+      university,
+      graduateYear,
+      gender,
+      companyName,
+      designation,
+      noticePeriod,
+      currentCTC,
+      preferredJobTitles,
+      preferredJobLocations,
+      linkedinURL,
+      page,
+      limit
     );
     response
       .status(200)
