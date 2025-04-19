@@ -37,7 +37,6 @@ const candidatesModal = {
     resume,
     courseName,
     courseLocation,
-    courseMode,
     courseStatus,
     mockupPercentage,
     courseJoiningDate,
@@ -79,13 +78,12 @@ const candidatesModal = {
     resume,
     courseName,
     courseLocation,
-    courseMode,
     courseStatus,
     mockupPercentage,
     courseJoiningDate,
     createdAt
 ) 
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`; //39
 
       const values = [
         firstName,
@@ -122,7 +120,6 @@ const candidatesModal = {
         resume,
         courseName,
         courseLocation,
-        courseMode,
         courseStatus,
         mockupPercentage,
         courseJoiningDate,

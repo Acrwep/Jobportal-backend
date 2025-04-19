@@ -67,9 +67,6 @@ const searchbyKeyword = async (request, response) => {
     page,
     limit,
   } = request.query;
-  if (!q) {
-    return response.status(400).send({ message: "Keyword is required" });
-  }
 
   try {
     const result = await adminModal.searchByKeyword({

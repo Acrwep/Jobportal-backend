@@ -121,9 +121,9 @@ const adminModal = {
       if (Array.isArray(courseLocation) && courseLocation.length > 0) {
         const courseLocationFilters = courseLocation.map((location) => {
           const lowerCourseLocation = location.toLowerCase();
-          return `LOWER(courseLocation) LIKE '%"${lowerCourseLocation}"%'`;
+          return `LOWER(courseLocation) LIKE '%${lowerCourseLocation}%'`;
         });
-        filters.push(`(${courseLocationFilters.join(" AND ")})`);
+        filters.push(`(${courseLocationFilters.join(" OR ")})`);
       }
       if (courseStatus) filters.push(`courseStatus LIKE '%${courseStatus}'`);
       if (eligibleStatus)
