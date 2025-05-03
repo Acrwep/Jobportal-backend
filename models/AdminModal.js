@@ -8,7 +8,7 @@ const adminModal = {
 
       const [result] = await pool.query(query, values);
       if (!result[0] || result[0].length === 0) {
-        throw new Error('Invalid credentials');
+        return null;
       }
       const user = result[0][0];
       return user;
