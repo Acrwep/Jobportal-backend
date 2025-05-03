@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const AdminController = require("../controllers/AdminController");
 const candidateController = require("../controllers/CandidatesController");
+const questionsController = require("../controllers/QuestionsController")
 const { verifyToken } = require("../Validation/Validation");
 
 //candidateController apis
@@ -43,5 +44,8 @@ router.get(
   verifyToken,
   AdminController.getFavoriteCandidates
 );
+router.get("/getsection", verifyToken, questionsController.getSections);
+router.get("/getcourses", verifyToken, questionsController.getCourses);
+router.post("/insertQuestions", verifyToken, questionsController.insertQuestion);
 
 module.exports = router;

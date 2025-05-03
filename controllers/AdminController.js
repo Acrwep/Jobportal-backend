@@ -7,7 +7,7 @@ const login = async (request, response) => {
 
   try {
     const result = await adminModal.login(email, password);
-    console.log("login result", result);
+    console.log("login results", result);
     if (result.length >= 1) {
       const Token = generateToken(result[0]);
       response.status(200).send({

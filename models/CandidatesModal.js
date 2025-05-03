@@ -306,8 +306,8 @@ const candidatesModal = {
           ...candidate,
           skills: candidate.skills
             ? skillsList.filter((s) =>
-                JSON.parse(candidate.skills || "[]").some((can) => s.id === can)
-              )
+              JSON.parse(candidate.skills || "[]").some((can) => s.id === can)
+            )
             : [],
           companyDetails: candidate.companyDetails
             ? JSON.parse(candidate.companyDetails)
