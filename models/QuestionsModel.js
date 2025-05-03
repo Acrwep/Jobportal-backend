@@ -59,32 +59,85 @@ const QuestionsModel = {
         }
     },
 
-    //Insert new option for the question
-    insertOptions: async (
-        question_id,
-        option_text
-    ) => {
+    bulkInsertOptions: async (question_id, options) => {
+        const conn = await pool.getConnection();
         try {
-            const query = `INSERT INTO options (question_id, option_text) VALUES (?, ?)`;
-            const [result] = await pool.execute(query, [question_id, option_text]);
-            return result;
+            await conn.beginTransaction();
+
+            // Use regular query with multiple value sets
+            const query = `
+                INSERT INTO options (question_id, option_text)
+                VALUES ${options.map(() => '(?, ?)').join(',')}
+            `;
+
+            // Flatten the parameters array
+            const params = options.flatMap(option_text => [question_id, option_text]);
+
+            const [result] = await conn.query(query, params);
+            await conn.commit();
+
+            return {
+                affectedRows: result.affectedRows,
+                question_id,
+                optionCount: options.length
+            };
         } catch (error) {
-            throw new Error("Error while inserting option: " + error.message);
+            await conn.rollback();
+            throw new Error(`Bulk insert failed: ${error.message}`);
+        } finally {
+            conn.release();
         }
     },
 
-    //Check option is exists for the specific question
-    findOptionByQuestion: async (
-        question_id,
-        option_text
-    ) => {
+    // Check for existing options (bulk version)
+    findExistingOptions: async (question_id, options) => {
+        const conn = await pool.getConnection();
         try {
-            const query = `SELECT * FROM options WHERE is_active = 1 AND question_id = ? AND option_text = ?`
-            const [result] = await pool.query(query, [question_id, option_text]);
-            return result[0];
+            // Create a temporary table pattern for IN clause
+            const placeholders = options.map(() => '?').join(',');
+            const query = `
+            SELECT * FROM options 
+            WHERE is_active = 1 
+            AND question_id = ? 
+            AND option_text IN (${placeholders})
+        `;
+
+            const [results] = await conn.query(query, [question_id, ...options]);
+            return results;
         } catch (error) {
-            throw new Error("Error checking option existence: " + error.message);
+            throw new Error(`Error checking option existence: ${error.message}`);
+        } finally {
+            conn.release();
         }
-    }
+    },
+
+    getQuestionsWithOptions: async (course_id, section_id) => {
+        try {
+            // 1. First get all questions
+            const query = `SELECT id, question AS name FROM questions WHERE course_id = ? AND section_id = ?`;
+            const values = [course_id, section_id];
+            const [questions] = await pool.query(query, values);
+            console.log("questions", questions);
+            // 2. Get all active options
+            const [options] = await pool.query(
+                'SELECT id, question_id, option_text AS name FROM options WHERE is_active = 1'
+            );
+            console.log("options", options);
+            // 3. Transform into nested structure
+            const result = questions.map(question => ({
+                name: question.name,
+                options: options
+                    .filter(option => option.question_id === question.id)
+                    .map(option => ({
+                        id: option.id,
+                        name: option.name
+                    }))
+            }));
+
+            return result;
+        } catch (error) {
+            throw new Error(`Failed to get questions with options: ${error.message}`);
+        }
+    },
 }
 module.exports = QuestionsModel;

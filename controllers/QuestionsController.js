@@ -70,37 +70,65 @@ const insertQuestion = async (request, response) => {
     }
 };
 
-const insertOption = async (request, response) => {
-    const {
-        question_id,
-        option_text
-    } = request.body;
-    try {
-        const existingOption = await questionsModel.findOptionByQuestion(question_id, option_text);
+const insertOptions = async (request, response) => {
+    const { question_id, options } = request.body; // Now accepts array of options
 
-        if (existingOption) {
+    if (!question_id || !options || !Array.isArray(options)) {
+        return response.status(400).json({
+            message: "question_id and options array are required"
+        });
+    }
+
+    try {
+        // Check for existing options
+        const existingOptions = await questionsModel.findExistingOptions(question_id, options);
+
+        if (existingOptions.length > 0) {
             return response.status(409).json({
-                message: "Option already exists for this question",
-                existingOption
+                message: "Some options already exist for this question",
+                existingOptions
             });
         }
 
-        await questionsModel.insertOptions(question_id, option_text);
-        response.status(201).send({
-            message: "Option inserted successfully"
+        // Insert all new options
+        const result = await questionsModel.bulkInsertOptions(question_id, options);
+
+        response.status(201).json({
+            message: `${result.affectedRows} options inserted successfully`,
+            insertedCount: result.affectedRows
         });
     } catch (error) {
-        response.status(500).send({
-            message: "Error while inserting.",
+        response.status(500).json({
+            message: "Error while inserting options",
             details: error.message
         });
     }
-}
+};
+
+const getQuestions = async (request, response) => {
+    const {
+        course_id,
+        section_id
+    } = request.query;
+    try {
+        const questionsWithOptions = await questionsModel.getQuestionsWithOptions(course_id, section_id);
+        response.status(200).send({
+            message: "Questions with option fetched successfully",
+            data: questionsWithOptions
+        });
+    } catch (error) {
+        response.status(500).json({
+            message: "Error fetching questions",
+            details: error.message
+        });
+    }
+};
 
 
 module.exports = {
     getSections,
     getCourses,
     insertQuestion,
-    insertOption,
+    insertOptions,
+    getQuestions,
 };
