@@ -47,5 +47,6 @@ router.get(
 router.get("/getsection", verifyToken, questionsController.getSections);
 router.get("/getcourses", verifyToken, questionsController.getCourses);
 router.post("/insertQuestions", verifyToken, questionsController.insertQuestion);
+router.post("/insertoption", verifyToken, questionsController.insertOption);
 
 module.exports = router;

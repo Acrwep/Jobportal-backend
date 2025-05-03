@@ -44,6 +44,22 @@ const insertQuestion = async (request, response) => {
         course_id
     } = request.body;
     try {
+        // 1. First check if the question already exists
+        const existingQuestion = await questionsModel.findQuestionByTextAndSection(
+            question,
+            section_id,
+            course_id
+        );
+
+        // 2. If exists, return a 409 Conflict response
+        if (existingQuestion) {
+            return response.status(409).json({
+                message: "Question already exists for this section and course",
+                existingQuestion
+            });
+        }
+
+        // 3. If not exists, proceed with insertion
         await questionsModel.insertQuestion(question, correct_answer, section_id, course_id);
         response.status(201).send({ message: "Question inserted successfully" });
     } catch (error) {
@@ -54,8 +70,37 @@ const insertQuestion = async (request, response) => {
     }
 };
 
+const insertOption = async (request, response) => {
+    const {
+        question_id,
+        option_text
+    } = request.body;
+    try {
+        const existingOption = await questionsModel.findOptionByQuestion(question_id, option_text);
+
+        if (existingOption) {
+            return response.status(409).json({
+                message: "Option already exists for this question",
+                existingOption
+            });
+        }
+
+        await questionsModel.insertOptions(question_id, option_text);
+        response.status(201).send({
+            message: "Option inserted successfully"
+        });
+    } catch (error) {
+        response.status(500).send({
+            message: "Error while inserting.",
+            details: error.message
+        });
+    }
+}
+
+
 module.exports = {
     getSections,
     getCourses,
     insertQuestion,
+    insertOption,
 };

@@ -3,11 +3,15 @@ const pool = require("../config/dbConfig");
 const adminModal = {
   login: async (email, password) => {
     try {
-      const query = `SELECT * FROM admin WHERE email= ? AND password = ?`;
+      const query = `CALL uspAuthenticateUser(?, ?)`;
       const values = [email, password];
 
       const [result] = await pool.query(query, values);
-      return result;
+      if (!result[0] || result[0].length === 0) {
+        throw new Error('Invalid credentials');
+      }
+      const user = result[0][0];
+      return user;
     } catch (error) {
       throw error;
     }

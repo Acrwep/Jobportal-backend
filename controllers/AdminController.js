@@ -4,18 +4,23 @@ const jwt = require("jsonwebtoken");
 
 const login = async (request, response) => {
   const { email, password } = request.body;
-
+  if (!email || !password) {
+    return response.status(400).send({
+      message: "Email and password are required"
+    });
+  }
   try {
     const result = await adminModal.login(email, password);
     console.log("login results", result);
-    if (result.length >= 1) {
-      const Token = generateToken(result[0]);
+    if (result) {
+      const Token = generateToken(result);
       response.status(200).send({
         message: "Login successfully!",
         details: {
-          id: result[0].id,
-          name: result[0].name,
-          email: result[0].email,
+          id: result.id,
+          name: result.name,
+          email: result.email,
+          role: result.role,
           token: Token,
         },
       });
