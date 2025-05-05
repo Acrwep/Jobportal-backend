@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const AdminController = require("../controllers/AdminController");
 const candidateController = require("../controllers/CandidatesController");
-const questionsController = require("../controllers/QuestionsController")
+const questionsController = require("../controllers/QuestionsController");
 const { verifyToken } = require("../Validation/Validation");
 
 //candidateController apis
@@ -46,9 +46,18 @@ router.get(
 );
 router.get("/getsection", verifyToken, questionsController.getSections);
 router.get("/getcourses", verifyToken, questionsController.getCourses);
-router.post("/insertQuestions", verifyToken, questionsController.insertQuestion);
+router.post(
+  "/insertQuestions",
+  verifyToken,
+  questionsController.insertQuestion
+);
 // router.post("/insertoption", verifyToken, questionsController.insertOptions);
 router.get("/getquestions", verifyToken, questionsController.getQuestions);
-router.post("/updateQuestions", verifyToken, questionsController.updateQuestion);
+router.post(
+  "/updateQuestions",
+  verifyToken,
+  questionsController.updateQuestion
+);
+router.put("/deleteQuestions", verifyToken, questionsController.deleteQuestion);
 
 module.exports = router;

@@ -215,5 +215,16 @@ const QuestionsModel = {
       throw new Error("Error checking question existence: " + error.message);
     }
   },
+
+  deleteQuestion: async (id) => {
+    try {
+      const query = `UPDATE questions SET is_active = 0 WHERE id = ?`;
+      const [result] = await pool.query(query, [id]);
+      console.log("Result:", result);
+      return result.affectedRows;
+    } catch (error) {
+      throw new Error("Error while deleting: " + error.message);
+    }
+  },
 };
 module.exports = QuestionsModel;

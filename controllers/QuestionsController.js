@@ -184,6 +184,32 @@ const updateQuestion = async (request, response) => {
   }
 };
 
+const deleteQuestion = async (request, response) => {
+  const { id } = request.query;
+  try {
+    // 1. First check if the question already exists
+    const existingQuestion = await questionsModel.findQuestionExists(id);
+
+    // 2. If not exists, return a 409 Conflict response
+    if (!existingQuestion) {
+      return response.status(404).json({
+        message: "Question not found.",
+        questionId: id,
+      });
+    }
+
+    const affectedRows = await questionsModel.deleteQuestion(id);
+    return affectedRows > 0
+      ? response.status(201).send({ message: "Question has been deleted" })
+      : response.status(409).send({ message: "No records deleted" });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while deleting.",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getSections,
   getCourses,
@@ -191,4 +217,5 @@ module.exports = {
   // insertOptions,
   getQuestions,
   updateQuestion,
+  deleteQuestion,
 };
