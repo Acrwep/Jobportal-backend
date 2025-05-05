@@ -41,7 +41,11 @@ const insertQuestion = async (request, response) => {
         question,
         correct_answer,
         section_id,
-        course_id
+        course_id,
+        option_a,
+        option_b,
+        option_c,
+        option_d
     } = request.body;
     try {
         // 1. First check if the question already exists
@@ -60,7 +64,7 @@ const insertQuestion = async (request, response) => {
         }
 
         // 3. If not exists, proceed with insertion
-        await questionsModel.insertQuestion(question, correct_answer, section_id, course_id);
+        await questionsModel.insertQuestion(question, correct_answer, section_id, course_id, option_a, option_b, option_c, option_d);
         response.status(201).send({ message: "Question inserted successfully" });
     } catch (error) {
         response.status(500).send({
@@ -70,40 +74,40 @@ const insertQuestion = async (request, response) => {
     }
 };
 
-const insertOptions = async (request, response) => {
-    const { question_id, options } = request.body; // Now accepts array of options
+// const insertOptions = async (request, response) => {
+//     const { question_id, options } = request.body; // Now accepts array of options
 
-    if (!question_id || !options || !Array.isArray(options)) {
-        return response.status(400).json({
-            message: "question_id and options array are required"
-        });
-    }
+//     if (!question_id || !options || !Array.isArray(options)) {
+//         return response.status(400).json({
+//             message: "question_id and options array are required"
+//         });
+//     }
 
-    try {
-        // Check for existing options
-        const existingOptions = await questionsModel.findExistingOptions(question_id, options);
+//     try {
+//         // Check for existing options
+//         const existingOptions = await questionsModel.findExistingOptions(question_id, options);
 
-        if (existingOptions.length > 0) {
-            return response.status(409).json({
-                message: "Some options already exist for this question",
-                existingOptions
-            });
-        }
+//         if (existingOptions.length > 0) {
+//             return response.status(409).json({
+//                 message: "Some options already exist for this question",
+//                 existingOptions
+//             });
+//         }
 
-        // Insert all new options
-        const result = await questionsModel.bulkInsertOptions(question_id, options);
+//         // Insert all new options
+//         const result = await questionsModel.bulkInsertOptions(question_id, options);
 
-        response.status(201).json({
-            message: `${result.affectedRows} options inserted successfully`,
-            insertedCount: result.affectedRows
-        });
-    } catch (error) {
-        response.status(500).json({
-            message: "Error while inserting options",
-            details: error.message
-        });
-    }
-};
+//         response.status(201).json({
+//             message: `${result.affectedRows} options inserted successfully`,
+//             insertedCount: result.affectedRows
+//         });
+//     } catch (error) {
+//         response.status(500).json({
+//             message: "Error while inserting options",
+//             details: error.message
+//         });
+//     }
+// };
 
 const getQuestions = async (request, response) => {
     const {
@@ -129,6 +133,6 @@ module.exports = {
     getSections,
     getCourses,
     insertQuestion,
-    insertOptions,
+    // insertOptions,
     getQuestions,
 };
