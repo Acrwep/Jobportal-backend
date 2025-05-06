@@ -58,6 +58,10 @@ router.post(
   verifyToken,
   questionsController.updateQuestion
 );
-router.put("/deleteQuestions", verifyToken, questionsController.deleteQuestion);
+router.delete(
+  "/deleteQuestions",
+  verifyToken,
+  questionsController.deleteQuestion
+);
 
 module.exports = router;

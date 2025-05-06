@@ -128,12 +128,12 @@ const QuestionsModel = {
   // },
 
   getQuestionsWithOptions: async (course_id, section_id) => {
-    let query;
-    if (course_id === undefined && section_id === undefined) {
-      query = `SELECT q.id AS question_id, q.course_id, c.name AS course_name, q.correct_answer, section_id, s.name as section_name, question, option_a, option_b, option_c, option_d FROM questions q LEFT JOIN section s on q.section_id = s.id LEFT JOIN course c on c.id = q.course_id WHERE q.is_active = 1`;
-    } else {
-      query = `SELECT q.id AS question_id, q.course_id, c.name AS course_name, q.correct_answer, section_id, s.name as section_name, question, option_a, option_b, option_c, option_d FROM questions q LEFT JOIN section s on q.section_id = s.id LEFT JOIN course c on c.id = q.course_id WHERE q.is_active = 1 AND course_id = ? AND section_id = ?`;
-    }
+    const query = `SELECT q.id AS question_id, q.course_id, c.name AS course_name, q.correct_answer, section_id, s.name as section_name, question, option_a, option_b, option_c, option_d FROM questions q LEFT JOIN section s on q.section_id = s.id LEFT JOIN course c on c.id = q.course_id WHERE q.is_active = 1 AND (${
+      course_id === undefined ? null : course_id
+    } IS NULL OR course_id = ?) AND (${
+      section_id === undefined ? null : section_id
+    } IS NULL OR section_id = ?)`;
+
     try {
       // 1. First get all questions
       const values = [course_id, section_id];
