@@ -128,7 +128,7 @@ const QuestionsModel = {
   // },
 
   getQuestionsWithOptions: async (course_id, section_id) => {
-    const querys = `SELECT q.id AS question_id, q.course_id, c.name AS course_name, q.correct_answer, section_id, s.name as section_name, question, option_a, option_b, option_c, option_d FROM questions q LEFT JOIN section s on q.section_id = s.id LEFT JOIN course c on c.id = q.course_id WHERE q.is_active = 1 AND (${
+    const queryd = `SELECT q.id AS question_id, q.course_id, c.name AS course_name, q.correct_answer, section_id, s.name as section_name, question, option_a, option_b, option_c, option_d FROM questions q LEFT JOIN section s on q.section_id = s.id LEFT JOIN course c on c.id = q.course_id WHERE q.is_active = 1 AND (${
       course_id === undefined ? null : course_id
     } IS NULL OR course_id = ?) AND (${
       section_id === undefined ? null : section_id
@@ -137,7 +137,7 @@ const QuestionsModel = {
     try {
       // 1. First get all questions
       const values = [course_id, section_id];
-      const [questions] = await pool.query(querys, values);
+      const [questions] = await pool.query(queryd, values);
       return questions;
     } catch (error) {
       throw new Error(`Failed to get questions with options: ${error.message}`);
@@ -220,10 +220,75 @@ const QuestionsModel = {
     try {
       const query = `UPDATE questions SET is_active = 0 WHERE id = ?`;
       const [result] = await pool.query(query, [id]);
-      console.log("Result:", result);
       return result.affectedRows;
     } catch (error) {
       throw new Error("Error while deleting: " + error.message);
+    }
+  },
+
+  insertUserAnswer: async (user_id, course_id, answers) => {
+    const connection = await db.getConnection();
+    try {
+      await connection.beginTransaction();
+      // 1. Get the last attempt number for this user and course
+      const query = `SELECT MAX(attempt_number) AS last_attempt FROM test_attempts WHERE user_id = ? AND course_id = ?`;
+      const [rows] = await db.query(query, [user_id, course_id]);
+      const lastAttempt = rows[0].last_attempt || 0;
+      const nextAttempt = lastAttempt + 1;
+
+      // 2. Insert new attempt with incremented attempt_number
+      const [attemptResult] = await db.query(
+        "INSERT INTO test_attempts (user_id, course_id, attempt_number) VALUES (?, ?, ?)",
+        [user_id, course_id, nextAttempt]
+      );
+
+      // Step 3: For each answer, get correct answer, compare, calculate mark
+      const answerValues = [];
+      let totalMarks = 0;
+
+      for (const answer of answers) {
+        const { question_id, selected_option } = answer;
+
+        // Get correct answer for the question
+        const [correctRows] = await connection.query(
+          `SELECT correct_answer FROM questions WHERE id = ?`,
+          [question_id]
+        );
+
+        const correctAnswer = correctRows[0]?.correct_answer;
+        const mark = correctAnswer === selected_option ? 1 : 0;
+        totalMarks += mark;
+
+        answerValues.push([
+          user_id,
+          question_id,
+          selected_option,
+          mark,
+          nextAttempt,
+        ]);
+
+        // Step 4: Bulk insert all answers
+        await connection.query(
+          `INSERT INTO user_answers 
+       (user_id, question_id, selected_option, mark, attempt_number)
+       VALUES ?`,
+          [answerValues]
+        );
+
+        await connection.commit();
+        connection.release();
+
+        return {
+          success: true,
+          attempt_number: nextAttempt,
+          total_questions: answers.length,
+          total_marks_obtained: totalMarks,
+        };
+      }
+    } catch (error) {
+      await connection.rollback();
+      connection.release();
+      throw new Error("Error in insertUserAnswer:" + error.message);
     }
   },
 };
