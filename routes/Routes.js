@@ -63,5 +63,13 @@ router.delete(
   verifyToken,
   questionsController.deleteQuestion
 );
+router.post(
+  "/insertAnswers",
+  verifyToken,
+  questionsController.insertUserAnswer
+);
+router.get("/getRoles", verifyToken, questionsController.getRoles);
+router.post("/insertAdmin", verifyToken, questionsController.insertAdmin);
+router.get("/getUsers", verifyToken, questionsController.getUsers);
 
 module.exports = router;

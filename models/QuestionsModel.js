@@ -227,17 +227,17 @@ const QuestionsModel = {
   },
 
   insertUserAnswer: async (user_id, course_id, answers) => {
-    const connection = await db.getConnection();
+    const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
       // 1. Get the last attempt number for this user and course
       const query = `SELECT MAX(attempt_number) AS last_attempt FROM test_attempts WHERE user_id = ? AND course_id = ?`;
-      const [rows] = await db.query(query, [user_id, course_id]);
+      const [rows] = await connection.query(query, [user_id, course_id]);
       const lastAttempt = rows[0].last_attempt || 0;
       const nextAttempt = lastAttempt + 1;
 
       // 2. Insert new attempt with incremented attempt_number
-      const [attemptResult] = await db.query(
+      const [attemptResult] = await connection.query(
         "INSERT INTO test_attempts (user_id, course_id, attempt_number) VALUES (?, ?, ?)",
         [user_id, course_id, nextAttempt]
       );
@@ -245,6 +245,7 @@ const QuestionsModel = {
       // Step 3: For each answer, get correct answer, compare, calculate mark
       const answerValues = [];
       let totalMarks = 0;
+      console.log("Answers", answers);
 
       for (const answer of answers) {
         const { question_id, selected_option } = answer;
@@ -266,29 +267,131 @@ const QuestionsModel = {
           mark,
           nextAttempt,
         ]);
+      }
 
-        // Step 4: Bulk insert all answers
+      // 4. Bulk insert all answers at once (more efficient)
+      if (answerValues.length > 0) {
         await connection.query(
           `INSERT INTO user_answers 
-       (user_id, question_id, selected_option, mark, attempt_number)
-       VALUES ?`,
+             (user_id, question_id, selected_option, mark, attempt_number)
+             VALUES ?`,
           [answerValues]
         );
-
-        await connection.commit();
-        connection.release();
-
-        return {
-          success: true,
-          attempt_number: nextAttempt,
-          total_questions: answers.length,
-          total_marks_obtained: totalMarks,
-        };
       }
+
+      await connection.commit();
+      connection.release();
+
+      return {
+        success: true,
+        attempt_number: nextAttempt,
+        total_questions: answers.length,
+        total_marks_obtained: totalMarks,
+      };
     } catch (error) {
       await connection.rollback();
       connection.release();
       throw new Error("Error in insertUserAnswer:" + error.message);
+    }
+  },
+
+  getRoles: async () => {
+    try {
+      const [result] = await pool.query(
+        "SELECT id, name FROM role WHERE is_active = 1 ORDER BY id"
+      );
+      return result;
+    } catch (error) {
+      throw new Error("Error while getting roles: ", error.message);
+    }
+  },
+
+  insertAdmin: async (name, email, password, role_id) => {
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      // 1. Check if email exists (properly)
+      const [emailCheck] = await conn.query(
+        "SELECT id FROM admin WHERE email = ? LIMIT 1",
+        [email]
+      );
+
+      if (emailCheck.length > 0) {
+        throw new Error(`Admin with email ${email} already exists`);
+      }
+      const query = `INSERT INTO admin (name, email, password, role_id) VALUES (?, ?, ?, ?)`;
+      const values = [name, email, password, role_id];
+      const [result] = await conn.execute(query, values);
+      await conn.commit();
+      conn.release();
+      return result;
+    } catch (error) {
+      await conn.rollback();
+      conn.release();
+      throw new Error("Error while inserting: " + error.message);
+    }
+  },
+
+  // getUsers: async (email, name) => {
+  //   try {
+  //     const userEmail = email !== undefined ? email : "";
+  //     const userName = name !== undefined ? name : "";
+
+  //     const query = `SELECT a.id, a.name, a.email, '' AS mobile, r.name AS role, '' AS course_id, '' AS course_name FROM admin a INNER JOIN role r ON a.role_id = r.id WHERE LOWER(a.email) LIKE LOWER(CONCAT('%', ?, '%')) AND LOWER(a.name) LIKE LOWER(CONCAT('%', ?, '%')) UNION ALL SELECT c.id, CONCAT(c.firstName, ' ', c.lastName) AS name, c.email, c.mobile, 'Student' AS role, cr.id AS course_id, cr.name AS course_name FROM candidates c INNER JOIN course cr ON c.course_id = cr.id WHERE LOWER(c.email) LIKE LOWER(CONCAT('%', ?, '%')) AND LOWER(CONCAT(C.firstName, c.lastName)) LIKE LOWER(CONCAT('%', ?, '%'))`;
+  //     const [result] = await pool.query(query, [userEmail, userName]);
+  //     return result;
+  //   } catch (error) {
+  //     throw new Error("Error while fetching users: " + error.message);
+  //   }
+  // },
+
+  getUsers: async (email, name) => {
+    try {
+      // Prepare search patterns
+      const emailPattern = email ? `%${email.toLowerCase()}%` : "%%";
+      const namePattern = name ? `%${name.toLowerCase()}%` : "%%";
+
+      const query = `
+            SELECT 
+                a.id, 
+                a.name, 
+                a.email, 
+                '' AS mobile, 
+                r.name AS role, 
+                '' AS course_id, 
+                '' AS course_name 
+            FROM admin a 
+            INNER JOIN role r ON a.role_id = r.id
+            WHERE a.email LIKE ? 
+            AND a.name LIKE ?
+            
+            UNION ALL
+            
+            SELECT 
+                c.id, 
+                CONCAT(c.firstName, ' ', c.lastName) AS name, 
+                c.email, 
+                c.mobile, 
+                'Student' AS role, 
+                cr.id AS course_id, 
+                cr.name AS course_name 
+            FROM candidates c 
+            INNER JOIN course cr ON c.course_id = cr.id
+            WHERE c.email LIKE ? 
+            AND LOWER(CONCAT(c.firstName, ' ', c.lastName)) LIKE ?
+        `;
+
+      const [result] = await pool.query(query, [
+        emailPattern,
+        namePattern,
+        emailPattern,
+        namePattern,
+      ]);
+
+      return result;
+    } catch (error) {
+      throw new Error("Error while fetching users: " + error.message);
     }
   },
 };

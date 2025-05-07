@@ -210,6 +210,84 @@ const deleteQuestion = async (request, response) => {
   }
 };
 
+const insertUserAnswer = async (request, response) => {
+  const { course_id, user_id, answers } = request.body;
+  try {
+    const result = await questionsModel.insertUserAnswer(
+      user_id,
+      course_id,
+      answers
+    );
+    return response
+      .status(201)
+      .send({ message: "Answers submited successfully", result });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while updating.",
+      details: error.message,
+    });
+  }
+};
+
+const getRoles = async (request, response) => {
+  try {
+    const roles = await questionsModel.getRoles();
+    return response.status(200).send({
+      message: "Roles fetched successfully",
+      data: roles,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while getting roles",
+      details: error.message,
+    });
+  }
+};
+
+const insertAdmin = async (request, response) => {
+  const { name, email, password, role_id } = request.body;
+  // Validate required fields
+  if (!name || !email || !password || !role_id) {
+    return response.status(400).json({
+      message: "Missing required fields",
+      required: ["name", "email", "password", "role_id"],
+    });
+  }
+  try {
+    const result = await questionsModel.insertAdmin(
+      name,
+      email,
+      password,
+      role_id
+    );
+    return response.status(201).send({
+      message: "Inserted successfully",
+      data: result.insertId,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while inserting admin",
+      details: error.message,
+    });
+  }
+};
+
+const getUsers = async (request, response) => {
+  const { email, name } = request.query;
+  try {
+    const users = await questionsModel.getUsers(email, name);
+    return response.status(200).send({
+      message: "Users data fetched successfully",
+      data: users,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while fetching users",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getSections,
   getCourses,
@@ -218,4 +296,8 @@ module.exports = {
   getQuestions,
   updateQuestion,
   deleteQuestion,
+  insertUserAnswer,
+  getRoles,
+  insertAdmin,
+  getUsers,
 };
