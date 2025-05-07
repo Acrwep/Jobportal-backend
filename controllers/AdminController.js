@@ -6,7 +6,7 @@ const login = async (request, response) => {
   const { email, password } = request.body;
   if (!email || !password) {
     return response.status(400).send({
-      message: "Email and password are required"
+      message: "Email and password are required",
     });
   }
   try {
@@ -63,7 +63,8 @@ const searchbyKeyword = async (request, response) => {
     noticePeriod,
     currentCTC,
     linkedinURL,
-    courseName,
+    // courseName,
+    course_id,
     courseLocation,
     courseStatus,
     eligibleStatus,
@@ -95,7 +96,8 @@ const searchbyKeyword = async (request, response) => {
       noticePeriod,
       currentCTC,
       linkedinURL,
-      courseName,
+      // courseName,
+      course_id,
       courseLocation,
       courseStatus,
       eligibleStatus,

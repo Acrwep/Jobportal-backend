@@ -35,7 +35,8 @@ const candidatesModal = {
     profileImage,
     languages,
     resume,
-    courseName,
+    // courseName,
+    course_id,
     courseLocation,
     courseStatus,
     mockupPercentage,
@@ -76,7 +77,7 @@ const candidatesModal = {
     profileImage,
     languages,
     resume,
-    courseName,
+    course_id,
     courseLocation,
     courseStatus,
     mockupPercentage,
@@ -118,7 +119,8 @@ const candidatesModal = {
         profileImage,
         JSON.stringify(languages),
         resume,
-        courseName,
+        // courseName,
+        course_id,
         courseLocation,
         courseStatus,
         mockupPercentage,
@@ -306,8 +308,8 @@ const candidatesModal = {
           ...candidate,
           skills: candidate.skills
             ? skillsList.filter((s) =>
-              JSON.parse(candidate.skills || "[]").some((can) => s.id === can)
-            )
+                JSON.parse(candidate.skills || "[]").some((can) => s.id === can)
+              )
             : [],
           companyDetails: candidate.companyDetails
             ? JSON.parse(candidate.companyDetails)

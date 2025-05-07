@@ -40,7 +40,8 @@ const adminModal = {
         noticePeriod,
         currentCTC,
         linkedinURL,
-        courseName,
+        // courseName,
+        course_id,
         courseLocation,
         courseStatus,
         eligibleStatus,
@@ -121,7 +122,8 @@ const adminModal = {
       if (currentCTC) filters.push(`currentCTC LIKE '%${currentCTC}%'`);
       if (linkedinURL) filters.push(`linkedinURL LIKE '%${linkedinURL}%'`);
 
-      if (courseName) filters.push(`courseName = '${courseName}'`);
+      // if (courseName) filters.push(`courseName = '${courseName}'`);
+      if (course_id) filters.push(`course_id = '${course_id}'`);
       if (Array.isArray(courseLocation) && courseLocation.length > 0) {
         const courseLocationFilters = courseLocation.map((location) => {
           const lowerCourseLocation = location.toLowerCase();
@@ -146,7 +148,7 @@ const adminModal = {
       const limitNumber = parseInt(limit, 10) || 10;
       const offset = (pageNumber - 1) * limitNumber;
 
-      const query = `SELECT * FROM candidates ${whereClause} LIMIT ? OFFSET ?`;
+      const query = `SELECT c.*, cr.name AS course_name FROM candidates c INNER JOIN course cr ON cr.id = c.course_id ${whereClause} LIMIT ? OFFSET ?`;
       const countQuery = `SELECT COUNT(*) AS total FROM candidates ${whereClause}`;
 
       const paginatedValues = [...values, limitNumber, offset];

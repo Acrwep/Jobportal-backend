@@ -333,19 +333,6 @@ const QuestionsModel = {
     }
   },
 
-  // getUsers: async (email, name) => {
-  //   try {
-  //     const userEmail = email !== undefined ? email : "";
-  //     const userName = name !== undefined ? name : "";
-
-  //     const query = `SELECT a.id, a.name, a.email, '' AS mobile, r.name AS role, '' AS course_id, '' AS course_name FROM admin a INNER JOIN role r ON a.role_id = r.id WHERE LOWER(a.email) LIKE LOWER(CONCAT('%', ?, '%')) AND LOWER(a.name) LIKE LOWER(CONCAT('%', ?, '%')) UNION ALL SELECT c.id, CONCAT(c.firstName, ' ', c.lastName) AS name, c.email, c.mobile, 'Student' AS role, cr.id AS course_id, cr.name AS course_name FROM candidates c INNER JOIN course cr ON c.course_id = cr.id WHERE LOWER(c.email) LIKE LOWER(CONCAT('%', ?, '%')) AND LOWER(CONCAT(C.firstName, c.lastName)) LIKE LOWER(CONCAT('%', ?, '%'))`;
-  //     const [result] = await pool.query(query, [userEmail, userName]);
-  //     return result;
-  //   } catch (error) {
-  //     throw new Error("Error while fetching users: " + error.message);
-  //   }
-  // },
-
   getUsers: async (email, name) => {
     try {
       // Prepare search patterns
