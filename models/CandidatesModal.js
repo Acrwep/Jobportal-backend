@@ -342,7 +342,7 @@ const candidatesModal = {
 
   getCandidatesById: async (candidateId) => {
     try {
-      const query = `SELECT * FROM candidates WHERE id = ?`;
+      const query = `SELECT c.*, cr.name AS course_name FROM candidates c INNER JOIN course cr ON cr.id = c.course_id WHERE id = ?`;
       const values = [candidateId];
 
       const [result] = await pool.query(query, values);
