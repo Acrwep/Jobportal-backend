@@ -587,9 +587,26 @@ const candidatesModal = {
     }
   },
 
-  getAllCandidates: async () => {
+  getAllCandidates: async (name, course_location, join_date) => {
     try {
-      const query = `SELECT
+      let conditions = [];
+      let values = [];
+      if (name) {
+        conditions.push("LOWER(CONCAT(c.firstName, ' ', c.lastName)) LIKE ?");
+        values.push(`%${name}%`);
+      }
+
+      if (course_location) {
+        conditions.push("LOWER(c.courseLocation) LIKE ?");
+        values.push(`%${course_location}%`);
+      }
+
+      if (join_date) {
+        conditions.push("CAST(c.courseJoiningDate AS DATE) = ?");
+        values.push(join_date);
+      }
+
+      let query = `SELECT
                     c.id,
                     CONCAT(c.firstName, ' ', c.lastName) AS name,
                     c.email,
@@ -623,7 +640,14 @@ const candidatesModal = {
                         GROUP BY 
                             user_id
                     ) t ON c.id = t.user_id`;
-      const [candidates] = await pool.query(query);
+
+      if (conditions.length > 0) {
+        // query += " WHERE " + conditions.join(" AND ");
+        const whereClause = " WHERE " + conditions.join(" AND ");
+        query += whereClause;
+      }
+
+      const [candidates] = await pool.query(query, values);
       return candidates;
     } catch (error) {
       throw new Error("Error while getting candidates: " + error.message);

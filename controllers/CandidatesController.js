@@ -286,8 +286,13 @@ const updateEligibleCandidate = async (request, response) => {
 };
 
 const getAllCandidates = async (request, response) => {
+  const { name, course_location, join_date } = request.query;
   try {
-    const candidates = await candidatesModal.getAllCandidates();
+    const candidates = await candidatesModal.getAllCandidates(
+      name,
+      course_location,
+      join_date
+    );
     response.status(200).send({
       message: "All candidates data fetched successfully",
       data: candidates,
