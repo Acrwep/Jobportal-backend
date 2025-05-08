@@ -3,6 +3,7 @@ const router = express.Router();
 const AdminController = require("../controllers/AdminController");
 const candidateController = require("../controllers/CandidatesController");
 const questionsController = require("../controllers/QuestionsController");
+const emailController = require("../controllers/EmailController");
 const { verifyToken } = require("../Validation/Validation");
 
 //candidateController apis
@@ -71,5 +72,6 @@ router.post(
 router.get("/getRoles", verifyToken, questionsController.getRoles);
 router.post("/insertAdmin", verifyToken, questionsController.insertAdmin);
 router.get("/getUsers", verifyToken, questionsController.getUsers);
+router.post("/sendEmail", verifyToken, emailController.sendTestLinks);
 
 module.exports = router;
