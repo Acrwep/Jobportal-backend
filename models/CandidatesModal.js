@@ -586,5 +586,48 @@ const candidatesModal = {
       throw new Error("Error updating candidate: " + error.message);
     }
   },
+
+  getAllCandidates: async () => {
+    try {
+      const query = `SELECT
+                    c.id,
+                    CONCAT(c.firstName, ' ', c.lastName) AS name,
+                    c.email,
+                    c.mobile,
+                    c.gender,
+                    c.courseLocation AS course_location,
+                    c.courseJoiningDate AS course_join_date,
+                    cr.name AS course_name,
+                    cr.id AS course_id,
+                    IFNULL(latest_email.sent_at, '') AS last_email_sent_date,
+                    IFNULL(t.attempt_count, 0) AS attempt_number
+                    FROM
+                        candidates c
+                    LEFT JOIN course cr ON
+                        c.course_id = cr.id
+                    LEFT JOIN (
+                        SELECT 
+                            user_id, 
+                            MAX(sent_at) AS sent_at
+                        FROM 
+                            email_logs
+                        GROUP BY 
+                            user_id
+                    ) latest_email ON c.id = latest_email.user_id
+                    LEFT JOIN (
+                        SELECT 
+                            user_id, 
+                            MAX(attempt_number) AS attempt_count
+                        FROM 
+                            test_attempts
+                        GROUP BY 
+                            user_id
+                    ) t ON c.id = t.user_id`;
+      const [candidates] = await pool.query(query);
+      return candidates;
+    } catch (error) {
+      throw new Error("Error while getting candidates: " + error.message);
+    }
+  },
 };
 module.exports = candidatesModal;

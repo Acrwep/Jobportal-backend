@@ -73,5 +73,10 @@ router.get("/getRoles", verifyToken, questionsController.getRoles);
 router.post("/insertAdmin", verifyToken, questionsController.insertAdmin);
 router.get("/getUsers", verifyToken, questionsController.getUsers);
 router.post("/sendEmail", verifyToken, emailController.sendTestLinks);
+router.get(
+  "/getAllCandidates",
+  verifyToken,
+  candidateController.getAllCandidates
+);
 
 module.exports = router;

@@ -1,3 +1,4 @@
+const { request, response } = require("express");
 const pool = require("../config/dbConfig");
 const candidatesModal = require("../models/CandidatesModal");
 
@@ -284,10 +285,26 @@ const updateEligibleCandidate = async (request, response) => {
   }
 };
 
+const getAllCandidates = async (request, response) => {
+  try {
+    const candidates = await candidatesModal.getAllCandidates();
+    response.status(200).send({
+      message: "All candidates data fetched successfully",
+      data: candidates,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while fetching candidates",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerCandidate,
   getCandidates,
   getCandidateById,
   getMultipleCandidatesbyId,
   updateEligibleCandidate,
+  getAllCandidates,
 };
