@@ -2,6 +2,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/dbConfig");
 require("dotenv").config();
+const moment = require("moment");
 
 const transporter = nodemailer.createTransport({
   service: process.env.SMTP_HOST,
@@ -26,7 +27,12 @@ async function sendTestLinks(users) {
       const candidateName = result[0].name;
       // 1. Generate time-sensitive token
       const token = generateToken(recipientEmail);
-      const testLink = `${process.env.FRONTEND_URL}/test?token=${token}`;
+      const testLink = `${process.env.LINK_URL}/test-invite/${token}`;
+      const today = new Date();
+
+      const expiryDateFormatted = moment(today)
+        .add(24, "hour")
+        .format("MMM DD, YYYY, h:mm A");
 
       try {
         // 2. Send email
@@ -34,11 +40,45 @@ async function sendTestLinks(users) {
           from: process.env.SMTP_FROM,
           to: recipientEmail,
           subject: "Your Test Invitation",
-          html: `<p>Hi ${candidateName},</p>
-               <p>Your test link is below (expires in 1 hour):</p>
-               <a href="${testLink}">Begin Test</a>
-               <p><a href="${process.env.FRONTEND_URL}/unsubscribe">Unsubscribe</a></p>
-               `,
+          html: `
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; margin:"10px 0 20px; font-family:""Poppins",Arial,sans-serif;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="20" cellspacing="0" style="background-color: #ffffff; margin: 14px; outline:1px solid #d6dbe2; border-radius:12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
+                  <tr>
+                    <td>
+                      <p style="font-size: 14px;">Hi ${candidateName},</p>
+      
+                      <p style="font-size: 14px;">I hope this email finds you well. We would like to invite you to participate in the <strong>Senior React Developer</strong> assessment from <strong>ACTE</strong>. To get started, please click on the button below:</p>
+      
+                      <p>
+                        <a href="${testLink}" style="
+                          display: inline-block;
+                          padding: 5px 16px;
+                          background-color: #0056b3;
+                          color: #ffffff;
+                          text-decoration: none;
+                          border-radius: 7px;
+                          font-weight: bold;
+                        ">
+                          Start
+                        </a>
+                      </p>
+      
+                      <p style="font-size: 14px;">If for any reason the above link does not work, please copy and paste the below URL into your web browser:</p>
+      
+                      <p style="word-break: break-all; font-size: 14px;"><a href="${testLink}">${testLink}</a></p>
+      
+                      <p style="font-size: 14px;"><strong>Assessment is valid until ${expiryDateFormatted} (IST)</strong></p>
+      
+                      <p style="font-size: 14px;">All the best,<br/>Team ACTE</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        `,
         });
 
         // Log successful email to database

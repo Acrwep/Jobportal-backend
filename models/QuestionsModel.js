@@ -318,7 +318,7 @@ const QuestionsModel = {
       );
 
       if (emailCheck.length > 0) {
-        throw new Error(`Admin with email ${email} already exists`);
+        return `Email already exists`;
       }
       const query = `INSERT INTO admin (name, email, password, role_id) VALUES (?, ?, ?, ?)`;
       const values = [name, email, password, role_id];

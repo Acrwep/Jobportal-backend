@@ -260,6 +260,9 @@ const insertAdmin = async (request, response) => {
       password,
       role_id
     );
+    if (result.includes("already exists")) {
+      return response.status(500).send({ message: result });
+    }
     return response.status(201).send({
       message: "Inserted successfully",
       data: result.insertId,
