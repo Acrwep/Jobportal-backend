@@ -72,7 +72,7 @@ router.post(
 router.get("/getRoles", verifyToken, questionsController.getRoles);
 router.post("/insertAdmin", verifyToken, questionsController.insertAdmin);
 router.get("/getUsers", verifyToken, questionsController.getUsers);
-router.post("/sendEmail", verifyToken, emailController.sendTestLinks);
+router.post("/sendEmail", emailController.sendTestLinks);
 router.get(
   "/getAllCandidates",
   verifyToken,
