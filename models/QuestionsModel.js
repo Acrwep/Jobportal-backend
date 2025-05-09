@@ -245,6 +245,7 @@ const QuestionsModel = {
       // Step 3: For each answer, get correct answer, compare, calculate mark
       const answerValues = [];
       let totalMarks = 0;
+      let percentage = 0;
       console.log("Answers", answers);
 
       for (const answer of answers) {
@@ -269,6 +270,9 @@ const QuestionsModel = {
         ]);
       }
 
+      // Calculate percentage
+      percentage = (totalMarks / answers.length) * 100;
+
       // 4. Bulk insert all answers at once (more efficient)
       if (answerValues.length > 0) {
         await connection.query(
@@ -287,6 +291,7 @@ const QuestionsModel = {
         attempt_number: nextAttempt,
         total_questions: answers.length,
         total_marks_obtained: totalMarks,
+        percentage: percentage.toFixed(2),
       };
     } catch (error) {
       await connection.rollback();

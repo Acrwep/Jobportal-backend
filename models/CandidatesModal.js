@@ -587,7 +587,13 @@ const candidatesModal = {
     }
   },
 
-  getAllCandidates: async (name, course_location, join_date) => {
+  getAllCandidates: async (
+    name,
+    course_location,
+    from_date,
+    to_date,
+    course_id
+  ) => {
     try {
       let conditions = [];
       let values = [];
@@ -601,9 +607,14 @@ const candidatesModal = {
         values.push(`%${course_location}%`);
       }
 
-      if (join_date) {
-        conditions.push("CAST(c.courseJoiningDate AS DATE) = ?");
-        values.push(join_date);
+      if (from_date && to_date) {
+        conditions.push(`CAST(c.courseJoiningDate AS DATE) BETWEEN ? AND ?`);
+        values.push(from_date, to_date);
+      }
+
+      if (course_id) {
+        conditions.push("c.course_id = ?");
+        values.push(course_id);
       }
 
       let query = `SELECT
@@ -642,7 +653,6 @@ const candidatesModal = {
                     ) t ON c.id = t.user_id`;
 
       if (conditions.length > 0) {
-        // query += " WHERE " + conditions.join(" AND ");
         const whereClause = " WHERE " + conditions.join(" AND ");
         query += whereClause;
       }
