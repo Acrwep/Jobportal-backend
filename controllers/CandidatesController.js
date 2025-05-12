@@ -308,6 +308,21 @@ const getAllCandidates = async (request, response) => {
   }
 };
 
+const getLocations = async (request, response) => {
+  try {
+    const locations = await candidatesModal.getLocations();
+    return response.status(200).send({
+      messages: "Location data fetched successfully",
+      data: locations,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while fetching location data",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerCandidate,
   getCandidates,
@@ -315,4 +330,5 @@ module.exports = {
   getMultipleCandidatesbyId,
   updateEligibleCandidate,
   getAllCandidates,
+  getLocations,
 };

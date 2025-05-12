@@ -311,7 +311,15 @@ const QuestionsModel = {
     }
   },
 
-  insertAdmin: async (name, email, password, role_id) => {
+  insertAdmin: async (
+    name,
+    email,
+    password,
+    role_id,
+    course_id,
+    location_id,
+    course_join_date
+  ) => {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
@@ -325,8 +333,16 @@ const QuestionsModel = {
       if (emailCheck.length > 0) {
         return `Email already exists`;
       }
-      const query = `INSERT INTO admin (name, email, password, role_id) VALUES (?, ?, ?, ?)`;
-      const values = [name, email, password, role_id];
+      const query = `INSERT INTO admin (name, email, password, role_id, course_id, location_id, course_join_date) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      const values = [
+        name,
+        email,
+        password,
+        role_id,
+        course_id,
+        location_id,
+        course_join_date,
+      ];
       const [result] = await conn.execute(query, values);
       await conn.commit();
       conn.release();
@@ -351,27 +367,13 @@ const QuestionsModel = {
                 a.email, 
                 '' AS mobile, 
                 r.name AS role, 
-                '' AS course_id, 
-                '' AS course_name 
+                IFNULL(a.course_id, 0) AS course_id,
+                IFNULL(c.name, '') AS course_name
             FROM admin a 
             INNER JOIN role r ON a.role_id = r.id
+            LEFT JOIN course c ON a.course_id = c.id
             WHERE a.email LIKE ? 
             AND a.name LIKE ?
-            
-            UNION ALL
-            
-            SELECT 
-                c.id, 
-                CONCAT(c.firstName, ' ', c.lastName) AS name, 
-                c.email, 
-                c.mobile, 
-                'Student' AS role, 
-                cr.id AS course_id, 
-                cr.name AS course_name 
-            FROM candidates c 
-            INNER JOIN course cr ON c.course_id = cr.id
-            WHERE c.email LIKE ? 
-            AND LOWER(CONCAT(c.firstName, ' ', c.lastName)) LIKE ?
         `;
 
       const [result] = await pool.query(query, [

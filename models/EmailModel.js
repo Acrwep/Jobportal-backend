@@ -21,7 +21,7 @@ const generateToken = (email) => {
 async function sendTestLinks(users) {
   try {
     const mailPromises = users.map(async (user) => {
-      const query = `SELECT id, email, CONCAT(firstName, ' ', lastName) AS name FROM candidates WHERE id = ?`;
+      const query = `SELECT id, email, name FROM admin WHERE id = ?`;
       const [result] = await pool.query(query, [user.id]);
       const recipientEmail = result[0].email;
       const candidateName = result[0].name;

@@ -5,6 +5,8 @@ const candidateController = require("../controllers/CandidatesController");
 const questionsController = require("../controllers/QuestionsController");
 const emailController = require("../controllers/EmailController");
 const { verifyToken } = require("../Validation/Validation");
+const CourseVideoController = require("../controllers/CourseVideosController");
+const upload = require("../Validation/UploadMiddleware");
 
 //candidateController apis
 router.post("/registration", candidateController.registerCandidate);
@@ -78,5 +80,16 @@ router.get(
   verifyToken,
   candidateController.getAllCandidates
 );
+router.get("/getLocations", candidateController.getLocations);
+
+// Upload video for a course
+router.post(
+  "/:courseId/videos",
+  upload.single("video"),
+  CourseVideoController.uploadVideo
+);
+
+// Get all videos for a course
+router.get("/:courseId/videos", CourseVideoController.getCourseVideos);
 
 module.exports = router;

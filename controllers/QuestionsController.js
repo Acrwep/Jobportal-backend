@@ -245,12 +245,36 @@ const getRoles = async (request, response) => {
 };
 
 const insertAdmin = async (request, response) => {
-  const { name, email, password, role_id } = request.body;
+  const {
+    name,
+    email,
+    password,
+    role_id,
+    course_id,
+    location_id,
+    course_join_date,
+  } = request.body;
   // Validate required fields
-  if (!name || !email || !password || !role_id) {
+  if (
+    !name ||
+    !email ||
+    !password ||
+    !role_id ||
+    !course_id ||
+    !location_id ||
+    !course_join_date
+  ) {
     return response.status(400).json({
       message: "Missing required fields",
-      required: ["name", "email", "password", "role_id"],
+      required: [
+        "name",
+        "email",
+        "password",
+        "role_id",
+        "course_id",
+        "location_id",
+        "course_join_date",
+      ],
     });
   }
   try {
@@ -258,11 +282,11 @@ const insertAdmin = async (request, response) => {
       name,
       email,
       password,
-      role_id
+      role_id,
+      course_id,
+      location_id,
+      course_join_date
     );
-    if (result.includes("already exists")) {
-      return response.status(500).send({ message: result });
-    }
     return response.status(201).send({
       message: "Inserted successfully",
       data: result.insertId,

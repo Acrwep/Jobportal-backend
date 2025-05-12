@@ -598,69 +598,71 @@ const candidatesModal = {
       let conditions = [];
       let values = [];
       if (name) {
-        conditions.push("LOWER(CONCAT(c.firstName, ' ', c.lastName)) LIKE ?");
+        conditions.push("LOWER(a.name) LIKE ?");
         values.push(`%${name}%`);
       }
 
       if (course_location) {
-        conditions.push("LOWER(c.courseLocation) LIKE ?");
+        conditions.push("LOWER(l.name) LIKE ?");
         values.push(`%${course_location}%`);
       }
 
       if (from_date && to_date) {
-        conditions.push(`CAST(c.courseJoiningDate AS DATE) BETWEEN ? AND ?`);
+        conditions.push(`CAST(a.course_join_date AS DATE) BETWEEN ? AND ?`);
         values.push(from_date, to_date);
       }
 
       if (course_id) {
-        conditions.push("c.course_id = ?");
+        conditions.push("a.course_id = ?");
         values.push(course_id);
       }
 
+      // Always exclude Admin and Trainer roles
+      conditions.push("r.name NOT IN ('Admin', 'Trainer')");
+
       let query = `SELECT
-                    c.id,
-                    CONCAT(c.firstName, ' ', c.lastName) AS name,
-                    c.email,
-                    c.mobile,
-                    c.gender,
-                    c.courseLocation AS course_location,
-                    c.courseJoiningDate AS course_join_date,
+                    a.id,
+                    a.name,
+                    a.email,
+                    l.name AS course_location,
+                    a.course_join_date,
                     cr.name AS course_name,
                     cr.id AS course_id,
                     IFNULL(latest_email.sent_at, '') AS last_email_sent_date,
                     IFNULL(t.attempt_count, 0) AS attempt_number
-                    FROM
-                        candidates c
-                    LEFT JOIN course cr ON
-                        c.course_id = cr.id
-                    LEFT JOIN (
-                        SELECT 
-                            user_id, 
-                            MAX(sent_at) AS sent_at
-                        FROM 
-                            email_logs
-                        GROUP BY 
-                            user_id
-                    ) latest_email ON c.id = latest_email.user_id
-                    LEFT JOIN (
-                        SELECT 
-                            user_id, 
-                            MAX(attempt_number) AS attempt_count
-                        FROM 
-                            test_attempts
-                        GROUP BY 
-                            user_id
-                    ) t ON c.id = t.user_id`;
+                  FROM admin a
+                  LEFT JOIN course cr ON a.course_id = cr.id
+                  LEFT JOIN location l ON a.location_id = l.id
+                  LEFT JOIN role r ON r.id = a.role_id
+                  LEFT JOIN (
+                    SELECT user_id, MAX(sent_at) AS sent_at
+                    FROM email_logs
+                    GROUP BY user_id
+                  ) latest_email ON a.id = latest_email.user_id
+                  LEFT JOIN (
+                    SELECT user_id, MAX(attempt_number) AS attempt_count
+                    FROM test_attempts
+                    GROUP BY user_id
+                  ) t ON a.id = t.user_id`;
 
       if (conditions.length > 0) {
-        const whereClause = " WHERE " + conditions.join(" AND ");
-        query += whereClause;
+        query += " WHERE " + conditions.join(" AND ");
       }
 
       const [candidates] = await pool.query(query, values);
       return candidates;
     } catch (error) {
       throw new Error("Error while getting candidates: " + error.message);
+    }
+  },
+
+  getLocations: async () => {
+    try {
+      const query = `SELECT id, name FROM location WHERE is_active = 1 ORDER BY name`;
+      const [locations] = await pool.query(query);
+      return locations;
+    } catch (error) {
+      throw new Error("Error while fetching location: " + error.message);
     }
   },
 };
