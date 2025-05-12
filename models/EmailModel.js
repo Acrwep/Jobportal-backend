@@ -39,7 +39,7 @@ async function sendTestLinks(users) {
         await transporter.sendMail({
           from: process.env.SMTP_FROM,
           to: recipientEmail,
-          subject: "Your Test Invitation",
+          subject: "ACTE has invited you to take an assessment!",
           html: `
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; margin:"10px 0 20px; font-family:""Poppins",Arial,sans-serif;">
             <tr>
@@ -49,7 +49,7 @@ async function sendTestLinks(users) {
                     <td>
                       <p style="font-size: 14px;">Hi ${candidateName},</p>
       
-                      <p style="font-size: 14px;">I hope this email finds you well. We would like to invite you to participate in the <strong>Senior React Developer</strong> assessment from <strong>ACTE</strong>. To get started, please click on the button below:</p>
+                      <p style="font-size: 14px;">I hope this email finds you well. We would like to invite you to participate in the <strong>Online assessment</strong> from <strong>ACTE</strong>. To get started, please click on the button below:</p>
       
                       <p>
                         <a href="${testLink}" style="

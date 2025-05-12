@@ -48,7 +48,7 @@ router.get(
   AdminController.getFavoriteCandidates
 );
 router.get("/getsection", verifyToken, questionsController.getSections);
-router.get("/getcourses", verifyToken, questionsController.getCourses);
+router.get("/getcourses", questionsController.getCourses);
 router.post(
   "/insertQuestions",
   verifyToken,
@@ -71,8 +71,8 @@ router.post(
   verifyToken,
   questionsController.insertUserAnswer
 );
-router.get("/getRoles", verifyToken, questionsController.getRoles);
-router.post("/insertAdmin", verifyToken, questionsController.insertAdmin);
+router.get("/getRoles", questionsController.getRoles);
+router.post("/insertAdmin", questionsController.insertAdmin);
 router.get("/getUsers", verifyToken, questionsController.getUsers);
 router.post("/sendEmail", emailController.sendTestLinks);
 router.get(
