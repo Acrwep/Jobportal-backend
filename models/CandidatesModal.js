@@ -660,5 +660,16 @@ const candidatesModal = {
       throw new Error("Error while fetching location: " + error.message);
     }
   },
+
+  checkCandidate: async (email) => {
+    try {
+      const query = `SELECT email FROM candidates WHERE email = ?`;
+      const [result] = await pool.query(query, [email]);
+      if (result.length > 0) return true;
+      else return false;
+    } catch (error) {
+      throw new Error("Error while checking candidate: " + error.message);
+    }
+  },
 };
 module.exports = candidatesModal;

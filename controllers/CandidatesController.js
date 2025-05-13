@@ -323,6 +323,22 @@ const getLocations = async (request, response) => {
   }
 };
 
+const checkCandidate = async (request, response) => {
+  const { email } = request.query;
+  try {
+    const result = await candidatesModal.checkCandidate(email);
+    return response.status(200).send({
+      message: "Candidate verified successfully",
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while checking candidate",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerCandidate,
   getCandidates,
@@ -332,4 +348,5 @@ module.exports = {
   // getAllCandidates,
   getLocations,
   getUsers,
+  checkCandidate,
 };

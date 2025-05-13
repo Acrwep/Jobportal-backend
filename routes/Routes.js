@@ -77,6 +77,7 @@ router.post("/insertAdmin", questionsController.insertAdmin);
 router.post("/sendEmail", emailController.sendTestLinks);
 router.get("/getUsers", verifyToken, candidateController.getUsers);
 router.get("/getLocations", candidateController.getLocations);
+router.get("/checkCandidate", candidateController.checkCandidate);
 
 // Upload video for a course
 router.post(
