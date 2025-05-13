@@ -285,11 +285,11 @@ const updateEligibleCandidate = async (request, response) => {
   }
 };
 
-const getAllCandidates = async (request, response) => {
+const getUsers = async (request, response) => {
   const { name, course_location, from_date, to_date, course_id } =
     request.query;
   try {
-    const candidates = await candidatesModal.getAllCandidates(
+    const candidates = await candidatesModal.getUsers(
       name,
       course_location,
       from_date,
@@ -329,6 +329,7 @@ module.exports = {
   getCandidateById,
   getMultipleCandidatesbyId,
   updateEligibleCandidate,
-  getAllCandidates,
+  // getAllCandidates,
   getLocations,
+  getUsers,
 };

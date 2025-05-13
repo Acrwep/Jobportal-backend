@@ -587,13 +587,7 @@ const candidatesModal = {
     }
   },
 
-  getAllCandidates: async (
-    name,
-    course_location,
-    from_date,
-    to_date,
-    course_id
-  ) => {
+  getUsers: async (name, course_location, from_date, to_date, course_id) => {
     try {
       let conditions = [];
       let values = [];
@@ -618,7 +612,7 @@ const candidatesModal = {
       }
 
       // Always exclude Admin and Trainer roles
-      conditions.push("r.name NOT IN ('Admin', 'Trainer')");
+      // conditions.push("r.name NOT IN ('Admin', 'Trainer')");
 
       let query = `SELECT
                     a.id,
@@ -629,7 +623,8 @@ const candidatesModal = {
                     cr.name AS course_name,
                     cr.id AS course_id,
                     IFNULL(latest_email.sent_at, '') AS last_email_sent_date,
-                    IFNULL(t.attempt_count, 0) AS attempt_number
+                    IFNULL(t.attempt_count, 0) AS attempt_number,
+                    r.name AS role
                   FROM admin a
                   LEFT JOIN course cr ON a.course_id = cr.id
                   LEFT JOIN location l ON a.location_id = l.id

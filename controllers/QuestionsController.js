@@ -299,21 +299,21 @@ const insertAdmin = async (request, response) => {
   }
 };
 
-const getUsers = async (request, response) => {
-  const { email, name } = request.query;
-  try {
-    const users = await questionsModel.getUsers(email, name);
-    return response.status(200).send({
-      message: "Users data fetched successfully",
-      data: users,
-    });
-  } catch (error) {
-    response.status(500).send({
-      message: "Error while fetching users",
-      details: error.message,
-    });
-  }
-};
+// const getUsers = async (request, response) => {
+//   const { email, name } = request.query;
+//   try {
+//     const users = await questionsModel.getUsers(email, name);
+//     return response.status(200).send({
+//       message: "Users data fetched successfully",
+//       data: users,
+//     });
+//   } catch (error) {
+//     response.status(500).send({
+//       message: "Error while fetching users",
+//       details: error.message,
+//     });
+//   }
+// };
 
 module.exports = {
   getSections,
@@ -326,5 +326,5 @@ module.exports = {
   insertUserAnswer,
   getRoles,
   insertAdmin,
-  getUsers,
+  // getUsers,
 };

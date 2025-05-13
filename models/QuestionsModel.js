@@ -354,39 +354,39 @@ const QuestionsModel = {
     }
   },
 
-  getUsers: async (email, name) => {
-    try {
-      // Prepare search patterns
-      const emailPattern = email ? `%${email.toLowerCase()}%` : "%%";
-      const namePattern = name ? `%${name.toLowerCase()}%` : "%%";
+  // getUsers: async (email, name) => {
+  //   try {
+  //     // Prepare search patterns
+  //     const emailPattern = email ? `%${email.toLowerCase()}%` : "%%";
+  //     const namePattern = name ? `%${name.toLowerCase()}%` : "%%";
 
-      const query = `
-            SELECT 
-                a.id, 
-                a.name, 
-                a.email, 
-                '' AS mobile, 
-                r.name AS role, 
-                IFNULL(a.course_id, 0) AS course_id,
-                IFNULL(c.name, '') AS course_name
-            FROM admin a 
-            INNER JOIN role r ON a.role_id = r.id
-            LEFT JOIN course c ON a.course_id = c.id
-            WHERE a.email LIKE ? 
-            AND a.name LIKE ?
-        `;
+  //     const query = `
+  //           SELECT
+  //               a.id,
+  //               a.name,
+  //               a.email,
+  //               '' AS mobile,
+  //               r.name AS role,
+  //               IFNULL(a.course_id, 0) AS course_id,
+  //               IFNULL(c.name, '') AS course_name
+  //           FROM admin a
+  //           INNER JOIN role r ON a.role_id = r.id
+  //           LEFT JOIN course c ON a.course_id = c.id
+  //           WHERE a.email LIKE ?
+  //           AND a.name LIKE ?
+  //       `;
 
-      const [result] = await pool.query(query, [
-        emailPattern,
-        namePattern,
-        emailPattern,
-        namePattern,
-      ]);
+  //     const [result] = await pool.query(query, [
+  //       emailPattern,
+  //       namePattern,
+  //       emailPattern,
+  //       namePattern,
+  //     ]);
 
-      return result;
-    } catch (error) {
-      throw new Error("Error while fetching users: " + error.message);
-    }
-  },
+  //     return result;
+  //   } catch (error) {
+  //     throw new Error("Error while fetching users: " + error.message);
+  //   }
+  // },
 };
 module.exports = QuestionsModel;

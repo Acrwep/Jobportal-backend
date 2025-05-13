@@ -73,13 +73,9 @@ router.post(
 );
 router.get("/getRoles", questionsController.getRoles);
 router.post("/insertAdmin", questionsController.insertAdmin);
-router.get("/getUsers", verifyToken, questionsController.getUsers);
+// router.get("/getUsers", verifyToken, questionsController.getUsers);
 router.post("/sendEmail", emailController.sendTestLinks);
-router.get(
-  "/getAllCandidates",
-  verifyToken,
-  candidateController.getAllCandidates
-);
+router.get("/getUsers", verifyToken, candidateController.getUsers);
 router.get("/getLocations", candidateController.getLocations);
 
 // Upload video for a course
