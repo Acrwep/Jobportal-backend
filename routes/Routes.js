@@ -81,12 +81,24 @@ router.get("/checkCandidate", candidateController.checkCandidate);
 
 // Upload video for a course
 router.post(
-  "/:courseId/videos",
+  "/uploadVideos",
   upload.single("video"),
   CourseVideoController.uploadVideo
 );
 
 // Get all videos for a course
-router.get("/:courseId/videos", CourseVideoController.getCourseVideos);
+router.get("/getVideos", CourseVideoController.getCourseVideos);
+router.delete("/deleteVideo/:fileName", CourseVideoController.deleteVideo);
+router.post(
+  "/insertTopic",
+  verifyToken,
+  CourseVideoController.insertCourseTopics
+);
+router.put(
+  "/updateTopic",
+  verifyToken,
+  CourseVideoController.updateCourseTopics
+);
+router.get("/getTopics", verifyToken, CourseVideoController.getCourseTopics);
 
 module.exports = router;
