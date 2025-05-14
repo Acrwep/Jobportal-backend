@@ -211,6 +211,16 @@ const CourseVideosModel = {
       conn.release();
     }
   },
+
+  getTrainersByCourse: async (course_id) => {
+    try {
+      const query = `SELECT a.id AS trainer_id, a.name AS trainer_name, a.email, r.name AS role, l.name AS course_location FROM trainer_course_mapping t LEFT JOIN admin a ON t.trainer_id = a.id LEFT JOIN location l ON l.id = a.location_id LEFT JOIN role r ON r.id = a.role_id WHERE t.course_id = ?`;
+      const [trainers] = await pool.query(query, [course_id]);
+      return trainers;
+    } catch (error) {
+      throw new Error("Error getting trainers: ", error.message);
+    }
+  },
 };
 
 module.exports = CourseVideosModel;

@@ -151,6 +151,22 @@ class CourseVideosController {
       });
     }
   }
+
+  static async getTrainersByCourse(request, response) {
+    const { course_id } = request.query;
+    try {
+      const trainers = await CourseVideoModel.getTrainersByCourse(course_id);
+      return response.status(200).send({
+        message: "Trainers data fetched successfully",
+        trainers,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Error getting trainers",
+        details: error.message,
+      });
+    }
+  }
 }
 
 module.exports = CourseVideosController;

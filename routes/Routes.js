@@ -101,5 +101,10 @@ router.put(
 );
 router.get("/getTopics", verifyToken, CourseVideoController.getCourseTopics);
 router.post("/courseMap", verifyToken, CourseVideoController.courseTrainerMap);
+router.get(
+  "/getTrainers",
+  verifyToken,
+  CourseVideoController.getTrainersByCourse
+);
 
 module.exports = router;
