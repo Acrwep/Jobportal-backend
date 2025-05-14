@@ -1,3 +1,4 @@
+const { request } = require("http");
 const CourseVideoModel = require("../models/CourseVideosModel");
 const upload = require("../Validation/UploadMiddleware");
 const fs = require("fs").promises;
@@ -127,6 +128,25 @@ class CourseVideosController {
     } catch (error) {
       return response.status(500).send({
         message: "Error getting topics",
+        details: error.message,
+      });
+    }
+  }
+
+  static async courseTrainerMap(request, response) {
+    const { course_id, trainers } = request.body;
+    try {
+      const result = await CourseVideoModel.courseTrainerMap(
+        course_id,
+        trainers
+      );
+      return response.status(200).send({
+        message: "Mapped successfully",
+        result,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Error mapping trainers",
         details: error.message,
       });
     }

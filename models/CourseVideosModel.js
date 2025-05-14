@@ -129,16 +129,86 @@ const CourseVideosModel = {
         conditions.push("course_id = ?");
         values.push(course_id);
       }
-      const query = `SELECT id, course_id, name FROM course_topics WHERE is_active = 1`;
+      let query = `SELECT id, course_id, name FROM course_topics WHERE is_active = 1`;
 
       if (conditions.length > 0) {
-        query += conditions.join(" AND ");
+        query += " AND " + conditions.join(" AND ");
       }
-
+      query += " ORDER BY name";
       const [topics] = await pool.query(query, values);
       return topics;
     } catch (error) {
       throw new Error("Error getting topics: " + error.message);
+    }
+  },
+
+  courseTrainerMap: async (course_id, trainers) => {
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      // 1. First check for existing mappings - FIXED PARAMETER BINDING
+      const checkQuery = `
+      SELECT trainer_id 
+      FROM trainer_course_mapping 
+      WHERE course_id = ? 
+      AND trainer_id IN (${trainers.map(() => "?").join(",")})
+    `;
+
+      const existingTrainerIds = trainers.map((t) => t.trainer_id);
+      const [existingMappings] = await conn.execute(
+        checkQuery,
+        [course_id, ...existingTrainerIds] // Spread operator for individual values
+      );
+
+      // 2. Filter out already mapped trainers
+      const existingIds = existingMappings.map((row) => row.trainer_id);
+      const newTrainers = trainers.filter(
+        (trainer) => !existingIds.includes(trainer.trainer_id)
+      );
+
+      if (newTrainers.length === 0) {
+        await conn.rollback();
+        conn.release();
+        return {
+          success: true,
+          message: "All trainers are already mapped to this course",
+          existingMappings: existingMappings,
+          newMappings: [],
+        };
+      }
+
+      // 3. Insert only new mappings
+      const placeholders = newTrainers.map(() => "(?, ?)").join(",");
+      const values = newTrainers.flatMap((trainer) => [
+        course_id,
+        trainer.trainer_id,
+      ]);
+
+      const insertQuery = `
+      INSERT INTO trainer_course_mapping (course_id, trainer_id) 
+      VALUES ${placeholders}
+    `;
+
+      const [result] = await conn.execute(insertQuery, values);
+      await conn.commit();
+
+      return {
+        success: true,
+        message: "Trainers mapped successfully",
+        existingMappings: existingMappings,
+        newMappings: result,
+        affectedRows: result.affectedRows,
+      };
+    } catch (error) {
+      await conn.rollback();
+      console.error("Database error details:", error); // Log full error for debugging
+      throw {
+        message: "Error mapping trainers",
+        details: error.message,
+      };
+    } finally {
+      conn.release();
     }
   },
 };

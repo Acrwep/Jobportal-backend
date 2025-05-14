@@ -100,5 +100,6 @@ router.put(
   CourseVideoController.updateCourseTopics
 );
 router.get("/getTopics", verifyToken, CourseVideoController.getCourseTopics);
+router.post("/courseMap", verifyToken, CourseVideoController.courseTrainerMap);
 
 module.exports = router;
