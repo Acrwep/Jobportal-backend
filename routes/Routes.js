@@ -79,13 +79,6 @@ router.get("/getUsers", verifyToken, candidateController.getUsers);
 router.get("/getLocations", candidateController.getLocations);
 router.get("/checkCandidate", candidateController.checkCandidate);
 
-// Upload video for a course
-router.post(
-  "/uploadVideos",
-  upload.single("video"),
-  CourseVideoController.uploadVideo
-);
-
 // Get all videos for a course
 router.get("/getVideos", CourseVideoController.getCourseVideos);
 router.delete("/deleteVideo/:fileName", CourseVideoController.deleteVideo);
@@ -105,6 +98,12 @@ router.get(
   "/getTrainers",
   verifyToken,
   CourseVideoController.getTrainersByCourse
+);
+
+router.post(
+  "/uploadContent",
+  upload.single("video"),
+  CourseVideoController.uploadContent
 );
 
 module.exports = router;

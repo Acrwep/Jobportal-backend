@@ -3,40 +3,110 @@ const CourseVideoModel = require("../models/CourseVideosModel");
 const upload = require("../Validation/UploadMiddleware");
 const fs = require("fs").promises;
 const path = require("path");
+const { type } = require("os");
 
 class CourseVideosController {
-  static async uploadVideo(request, response) {
-    const { course_id, topic_id, trainer_id } = request.body;
+  static async uploadContent(request, response) {
+    const {
+      course_id,
+      topic_id,
+      trainer_id,
+      content_type,
+      content_url,
+      title,
+      document_content,
+    } = request.body;
     try {
-      if (!request.file) {
+      //Validate required fields
+      if (!course_id || !topic_id || !trainer_id || !content_type) {
         return response.status(400).send({
-          message: "No video file uploaded",
+          message:
+            "Missing required fields (coures_id, topic_id, trainer_id, content_type)",
         });
       }
 
-      const videoData = {
-        filename: request.file.filename,
-        originalname: request.file.originalname,
-        size: request.file.size,
-        mimetype: request.file.mimetype,
-        path: `/uploads/course-videos/${request.file.filename}`,
-      };
+      let contentDate;
 
-      const videoId = await CourseVideoModel.createVideo(
+      switch (content_type) {
+        case "video":
+          if (!request.file) {
+            return response.status(400).send({
+              message: "No video file uploaded",
+            });
+          }
+
+          contentDate = {
+            type: "video",
+            fileName: request.file.filename,
+            originalname: request.file.originalname,
+            size: request.file.size,
+            mimetype: request.file.mimetype,
+            path: `/uploads/course-video/${request.file.filename}`,
+          };
+          break;
+
+        case "youtube":
+          if (!content_url) {
+            return response.status(400).send({
+              message: "YouTube URL is required",
+            });
+          }
+
+          contentDate = {
+            type: "youtube",
+            fileName: null,
+            originalname: null,
+            size: null,
+            mimetype: null,
+            path: content_url,
+            content: null,
+          };
+          break;
+
+        case "document":
+          if (!document_content) {
+            return response.status(400).send({
+              message: "No document file uploaded",
+            });
+          }
+
+          contentDate = {
+            type: "document",
+            fileName: null,
+            originalname: null,
+            size: null,
+            mimetype: null,
+            path: null,
+            content: document_content, // store binary data
+          };
+          break;
+
+        default:
+          return response.status(400).send({
+            message:
+              "Invalid conetnt type (must be 'video', 'youtube', or 'document')",
+          });
+      }
+
+      const contentId = await CourseVideoModel.createContent(
         course_id,
         topic_id,
         trainer_id,
-        videoData
+        title,
+        contentDate
       );
 
       return response.status(201).send({
-        message: "Video uploaded successfully",
-        data: videoId,
-        videoPath: videoData.path,
+        message: "Content uploaded successfully",
+        data: {
+          contentId,
+          type: content_type,
+          path: contentDate.path,
+        },
       });
     } catch (error) {
       response.status(500).send({
-        message: "Failed to upload video",
+        message: "Failed to upload content",
         details: error.message,
       });
     }

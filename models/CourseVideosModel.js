@@ -1,36 +1,38 @@
+const { title } = require("process");
 const pool = require("../config/dbConfig");
 const path = require("path");
 
 const CourseVideosModel = {
-  async createVideo(courseId, topic_id, trainer_id, videoData) {
+  createContent: async (
+    course_id,
+    topic_id,
+    trainer_id,
+    title,
+    contentData
+  ) => {
     try {
-      const {
-        filename,
+      const { type, fileName, originalname, size, mimetype, path, content } =
+        contentData;
+
+      const query = `INSERT INTO course_videos (course_id, topic_id, trainer_id, content_type, title, filename, original_name, size, mime_type, file_path, content_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
+      const values = [
+        course_id,
+        topic_id,
+        trainer_id,
+        type,
+        title,
+        fileName,
         originalname,
         size,
         mimetype,
-        path: filePath,
-      } = videoData;
+        path,
+        content,
+      ];
 
-      const [result] = await pool.query(
-        `INSERT INTO course_videos 
-      (course_id, topic_id, trainer_id, filename, original_name, size, mime_type, file_path) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          courseId,
-          topic_id,
-          trainer_id,
-          filename,
-          originalname,
-          size,
-          mimetype,
-          filePath,
-        ]
-      );
-
+      const [result] = await pool.query(query, values);
       return result.insertId;
     } catch (error) {
-      throw new Error("Error while uploading video: " + error.message);
+      throw new Error("Error while uploading content: " + error.message);
     }
   },
 
@@ -45,13 +47,19 @@ const CourseVideosModel = {
             cv.file_path,
             cv.created_at,
             c.name AS course_name,
-            ct.name AS topic_name
+            ct.name AS topic_name,
+            cv.content_data,
+            cv.mime_type,
+            a.name AS trainer_name,
+            cv.content_type
         FROM
             course_videos cv
         INNER JOIN course c ON
-          cv.course_id = c.id
+            cv.course_id = c.id
         INNER JOIN course_topics ct ON
-          ct.id = cv.topic_id
+            ct.id = cv.topic_id
+        LEFT JOIN admin a ON
+          a.id = cv.trainer_id
         WHERE
             cv.course_id = ? AND cv.is_deleted = 0
         ORDER BY
@@ -221,6 +229,14 @@ const CourseVideosModel = {
       throw new Error("Error getting trainers: ", error.message);
     }
   },
+
+  // deleteTopic: async (topic_id) => {
+  //   try {
+  //     const query = ``;
+  //   } catch (error) {
+  //     throw new Error("Error deleting topic: " + error.message);
+  //   }
+  // },
 };
 
 module.exports = CourseVideosModel;
