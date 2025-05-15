@@ -124,7 +124,7 @@ class CourseVideosController {
       }
       const result = await CourseVideoModel.deleteContent(id);
       response.status(200).send({
-        message: "Content deleted successfully",
+        message: "Content has been deleted",
       });
     } catch (error) {
       response.status(500).send({
@@ -137,14 +137,13 @@ class CourseVideosController {
   static async getCourseVideos(request, response) {
     const { course_id, topic_id } = request.query;
     try {
-      const courseId = request.params.courseId;
       const videos = await CourseVideoModel.getVideosByCourse(
         course_id,
         topic_id
       );
 
       return response.status(200).send({
-        message: "Videos has been deleted",
+        message: "Videos fetched successfully",
         videos,
       });
     } catch (error) {
@@ -246,7 +245,7 @@ class CourseVideosController {
     try {
       const result = await CourseVideoModel.deleteTopic(topic_id);
       return response.status(200).send({
-        message: "Topics has been removed",
+        message: "Topic has been removed successfully",
         result,
       });
     } catch (error) {

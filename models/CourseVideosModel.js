@@ -51,7 +51,8 @@ const CourseVideosModel = {
             cv.content_data,
             cv.mime_type,
             a.name AS trainer_name,
-            cv.content_type
+            cv.content_type,
+            cv.title
         FROM
             course_videos cv
         INNER JOIN course c ON
@@ -232,6 +233,15 @@ const CourseVideosModel = {
 
   deleteTopic: async (topic_id) => {
     try {
+      const [isTopicExists] = await pool.query(
+        `SELECT id FROM course_topics WHERE id = ? AND is_active = 1`,
+        [topic_id]
+      );
+      console.log("IsExists", isTopicExists);
+
+      if (isTopicExists.length === 0) {
+        throw new Error("Invalid topic id");
+      }
       const [checkTopicVideos] = await pool.query(
         `SELECT id FROM course_videos WHERE topic_id = ? AND is_deleted = 0`,
         [topic_id]
