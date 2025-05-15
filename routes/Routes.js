@@ -81,7 +81,7 @@ router.get("/checkCandidate", candidateController.checkCandidate);
 
 // Get all videos for a course
 router.get("/getVideos", CourseVideoController.getCourseVideos);
-router.delete("/deleteVideo/:fileName", CourseVideoController.deleteVideo);
+router.delete("/deleteContent", CourseVideoController.deleteContent);
 router.post(
   "/insertTopic",
   verifyToken,
@@ -105,5 +105,7 @@ router.post(
   upload.single("video"),
   CourseVideoController.uploadContent
 );
+
+router.delete("/deleteTopic", verifyToken, CourseVideoController.deleteTopic);
 
 module.exports = router;

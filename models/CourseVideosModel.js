@@ -36,7 +36,7 @@ const CourseVideosModel = {
     }
   },
 
-  async getVideosByCourse(courseId) {
+  async getVideosByCourse(courseId, topic_id) {
     try {
       const [videos] = await pool.query(
         `SELECT
@@ -61,12 +61,12 @@ const CourseVideosModel = {
         LEFT JOIN admin a ON
           a.id = cv.trainer_id
         WHERE
-            cv.course_id = ? AND cv.is_deleted = 0
+            cv.course_id = ? AND cv.topic_id = ? AND cv.is_deleted = 0
         ORDER BY
             cv.created_at
         DESC
     `,
-        [courseId]
+        [courseId, topic_id]
       );
       return videos;
     } catch (error) {
@@ -74,13 +74,13 @@ const CourseVideosModel = {
     }
   },
 
-  deleteVideo: async (fileName) => {
+  deleteContent: async (id) => {
     try {
-      const query = `UPDATE course_videos SET is_deleted = 1 WHERE filename = ?`;
-      const [result] = await pool.query(query, [fileName]);
+      const query = `UPDATE course_videos SET is_deleted = 1 WHERE id = ?`;
+      const [result] = await pool.query(query, [id]);
       return result[0];
     } catch (error) {
-      throw new Error("Error deleting video: " + error.message);
+      throw new Error("Error deleting content: " + error.message);
     }
   },
 
@@ -230,13 +230,28 @@ const CourseVideosModel = {
     }
   },
 
-  // deleteTopic: async (topic_id) => {
-  //   try {
-  //     const query = ``;
-  //   } catch (error) {
-  //     throw new Error("Error deleting topic: " + error.message);
-  //   }
-  // },
+  deleteTopic: async (topic_id) => {
+    try {
+      const [checkTopicVideos] = await pool.query(
+        `SELECT id FROM course_videos WHERE topic_id = ? AND is_deleted = 0`,
+        [topic_id]
+      );
+
+      if (checkTopicVideos.length > 0) {
+        throw new Error(
+          "Unable to remove the topic because it contains content."
+        );
+      }
+
+      const [result] = await pool.query(
+        `UPDATE course_topics SET is_active = 0 WHERE id = ?`,
+        [topic_id]
+      );
+      return result.affectedRows;
+    } catch (error) {
+      throw new Error("Error deleting topic: " + error.message);
+    }
+  },
 };
 
 module.exports = CourseVideosModel;

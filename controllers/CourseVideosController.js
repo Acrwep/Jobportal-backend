@@ -112,33 +112,36 @@ class CourseVideosController {
     }
   }
 
-  static async deleteVideo(request, response) {
+  static async deleteContent(request, response) {
+    const { filename, id } = request.query;
     try {
-      // const path = `/uploads/course-videos/${request.params.filename}`;
-      const filePath = path.join(
-        __dirname,
-        `../uploads/course-videos/${request.params.fileName}`
-      );
-      await fs.unlink(filePath);
-      const result = await CourseVideoModel.deleteVideo(
-        request.params.fileName
-      );
+      if (filename) {
+        const filePath = path.join(
+          __dirname,
+          `../uploads/course-videos/${filename}`
+        );
+        await fs.unlink(filePath);
+      }
+      const result = await CourseVideoModel.deleteContent(id);
       response.status(200).send({
-        message: "Video deleted successfully",
+        message: "Content deleted successfully",
       });
     } catch (error) {
       response.status(500).send({
-        message: "Error deleting video",
+        message: "Error deleting content",
         details: error.message,
       });
     }
   }
 
   static async getCourseVideos(request, response) {
-    const { course_id } = request.query;
+    const { course_id, topic_id } = request.query;
     try {
       const courseId = request.params.courseId;
-      const videos = await CourseVideoModel.getVideosByCourse(course_id);
+      const videos = await CourseVideoModel.getVideosByCourse(
+        course_id,
+        topic_id
+      );
 
       return response.status(200).send({
         message: "Videos has been deleted",
@@ -233,6 +236,22 @@ class CourseVideosController {
     } catch (error) {
       return response.status(500).send({
         message: "Error getting trainers",
+        details: error.message,
+      });
+    }
+  }
+
+  static async deleteTopic(request, response) {
+    const { topic_id } = request.query;
+    try {
+      const result = await CourseVideoModel.deleteTopic(topic_id);
+      return response.status(200).send({
+        message: "Topics has been removed",
+        result,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Error removing topics",
         details: error.message,
       });
     }
