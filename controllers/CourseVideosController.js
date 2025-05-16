@@ -135,11 +135,12 @@ class CourseVideosController {
   }
 
   static async getCourseVideos(request, response) {
-    const { course_id, topic_id } = request.query;
+    const { course_id, topic_id, trainer_id } = request.query;
     try {
       const videos = await CourseVideoModel.getVideosByCourse(
         course_id,
-        topic_id
+        topic_id,
+        trainer_id
       );
 
       return response.status(200).send({

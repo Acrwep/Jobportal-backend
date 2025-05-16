@@ -36,7 +36,7 @@ const CourseVideosModel = {
     }
   },
 
-  async getVideosByCourse(courseId, topic_id) {
+  async getVideosByCourse(courseId, topic_id, trainer_id) {
     try {
       const [videos] = await pool.query(
         `SELECT
@@ -62,12 +62,12 @@ const CourseVideosModel = {
         LEFT JOIN admin a ON
           a.id = cv.trainer_id
         WHERE
-            cv.course_id = ? AND cv.topic_id = ? AND cv.is_deleted = 0
+            cv.course_id = ? AND cv.topic_id = ? AND cv.trainer_id = ? AND cv.is_deleted = 0
         ORDER BY
             cv.created_at
         DESC
     `,
-        [courseId, topic_id]
+        [courseId, topic_id, trainer_id]
       );
       return videos;
     } catch (error) {
