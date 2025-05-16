@@ -223,7 +223,31 @@ const CourseVideosModel = {
 
   getTrainersByCourse: async (course_id) => {
     try {
-      const query = `SELECT a.id AS trainer_id, a.name AS trainer_name, a.email, r.name AS role, l.name AS course_location FROM trainer_course_mapping t LEFT JOIN admin a ON t.trainer_id = a.id LEFT JOIN location l ON l.id = a.location_id LEFT JOIN role r ON r.id = a.role_id WHERE t.course_id = ?`;
+      const query = `SELECT
+                        a.id AS trainer_id,
+                        a.name AS trainer_name,
+                        a.email,
+                        r.name AS role,
+                        IFNULL(l.name, '') AS course_location,
+                        IFNULL(a.experience, '') AS experience,
+                        IFNULL(a.profile, '') AS profile,
+                        COUNT(CASE WHEN cv.content_type = 'document' THEN 1 END) AS document_count,
+                        COUNT(CASE WHEN cv.content_type IN ('video', 'youtube') THEN 1 END) AS video_count,
+                        COUNT(cv.id) AS total_content_count
+                    FROM
+                        trainer_course_mapping t
+                    LEFT JOIN admin a ON
+                        t.trainer_id = a.id
+                    LEFT JOIN role r ON
+                        r.id = a.role_id
+                    LEFT JOIN location l ON
+                        l.id = a.location_id
+                    LEFT JOIN course_videos cv ON
+                        a.id = cv.trainer_id AND cv.course_id = t.course_id AND cv.is_deleted = 0
+                    WHERE
+                        t.course_id = ? AND r.name = 'Trainer'
+                    GROUP BY
+                        a.id, a.name, a.email, r.name, l.name, a.experience, a.profile;`;
       const [trainers] = await pool.query(query, [course_id]);
       return trainers;
     } catch (error) {
