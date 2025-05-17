@@ -263,8 +263,6 @@ const insertAdmin = async (request, response) => {
     !password ||
     !role_id ||
     !course_id ||
-    !location_id ||
-    !course_join_date ||
     !experience ||
     !profile
   ) {
