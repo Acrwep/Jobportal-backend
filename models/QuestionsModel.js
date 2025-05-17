@@ -318,7 +318,9 @@ const QuestionsModel = {
     role_id,
     course_id,
     location_id,
-    course_join_date
+    course_join_date,
+    experience,
+    profile
   ) => {
     const conn = await pool.getConnection();
     try {
@@ -333,11 +335,13 @@ const QuestionsModel = {
       if (emailCheck.length > 0) {
         return `Email already exists`;
       }
-      const query = `INSERT INTO admin (name, email, password, role_id, course_id, location_id, course_join_date) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      const query = `INSERT INTO admin (name, email, password, experience, profile, role_id, course_id, location_id, course_join_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       const values = [
         name,
         email,
         password,
+        experience,
+        profile,
         role_id,
         course_id,
         location_id,
@@ -354,39 +358,49 @@ const QuestionsModel = {
     }
   },
 
-  // getUsers: async (email, name) => {
-  //   try {
-  //     // Prepare search patterns
-  //     const emailPattern = email ? `%${email.toLowerCase()}%` : "%%";
-  //     const namePattern = name ? `%${name.toLowerCase()}%` : "%%";
+  getUserAttemptsWithAnswers: async (user_id) => {
+    try {
+      // 1. Get all attempts for the user
+      const [attempts] = await pool.query(
+        "SELECT attempt_number, attempt_date FROM test_attempts WHERE user_id = ? ORDER BY attempt_number",
+        [user_id]
+      );
 
-  //     const query = `
-  //           SELECT
-  //               a.id,
-  //               a.name,
-  //               a.email,
-  //               '' AS mobile,
-  //               r.name AS role,
-  //               IFNULL(a.course_id, 0) AS course_id,
-  //               IFNULL(c.name, '') AS course_name
-  //           FROM admin a
-  //           INNER JOIN role r ON a.role_id = r.id
-  //           LEFT JOIN course c ON a.course_id = c.id
-  //           WHERE a.email LIKE ?
-  //           AND a.name LIKE ?
-  //       `;
+      // 2. Loop through attempts to get answers and calculate stats
+      for (const attempt of attempts) {
+        const [answers] = await pool.query(
+          `SELECT
+              ua.question_id,
+              q.question,
+              ua.selected_option,
+              ua.mark,
+              q.section_id
+          FROM
+              user_answers ua
+          INNER JOIN questions q ON
+            q.id = ua.question_id
+          WHERE
+              ua.user_id = ? AND ua.attempt_number = ?`,
+          [user_id, attempt.attempt_number]
+        );
 
-  //     const [result] = await pool.query(query, [
-  //       emailPattern,
-  //       namePattern,
-  //       emailPattern,
-  //       namePattern,
-  //     ]);
+        const totalQuestions = answers.length;
+        const correctAnswers = answers.filter((a) => a.mark === 1).length;
+        const percentage =
+          totalQuestions > 0
+            ? Math.round((correctAnswers / totalQuestions) * 100)
+            : 0;
 
-  //     return result;
-  //   } catch (error) {
-  //     throw new Error("Error while fetching users: " + error.message);
-  //   }
-  // },
+        attempt.total_questions = totalQuestions;
+        attempt.correct_answers = correctAnswers;
+        attempt.percentage = percentage;
+        attempt.answers = answers;
+      }
+
+      return attempts;
+    } catch (error) {
+      throw new Error("Error getting candidate questions: " + error.message);
+    }
+  },
 };
 module.exports = QuestionsModel;

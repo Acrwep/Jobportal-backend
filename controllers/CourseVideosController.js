@@ -41,7 +41,7 @@ class CourseVideosController {
             originalname: request.file.originalname,
             size: request.file.size,
             mimetype: request.file.mimetype,
-            path: `/uploads/course-video/${request.file.filename}`,
+            path: `/uploads/course-videos/${request.file.filename}`,
           };
           break;
 

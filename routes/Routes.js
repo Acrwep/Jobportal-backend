@@ -107,5 +107,10 @@ router.post(
 );
 
 router.delete("/deleteTopic", verifyToken, CourseVideoController.deleteTopic);
+router.get(
+  "/user-attempts",
+  verifyToken,
+  questionsController.getUserAttemptsWithAnswers
+);
 
 module.exports = router;

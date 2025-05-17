@@ -253,6 +253,8 @@ const insertAdmin = async (request, response) => {
     course_id,
     location_id,
     course_join_date,
+    experience,
+    profile,
   } = request.body;
   // Validate required fields
   if (
@@ -262,7 +264,9 @@ const insertAdmin = async (request, response) => {
     !role_id ||
     !course_id ||
     !location_id ||
-    !course_join_date
+    !course_join_date ||
+    !experience ||
+    !profile
   ) {
     return response.status(400).json({
       message: "Missing required fields",
@@ -274,6 +278,8 @@ const insertAdmin = async (request, response) => {
         "course_id",
         "location_id",
         "course_join_date",
+        "experience",
+        "profile",
       ],
     });
   }
@@ -285,7 +291,9 @@ const insertAdmin = async (request, response) => {
       role_id,
       course_id,
       location_id,
-      course_join_date
+      course_join_date,
+      experience,
+      profile
     );
     return response.status(201).send({
       message: "Inserted successfully",
@@ -299,21 +307,21 @@ const insertAdmin = async (request, response) => {
   }
 };
 
-// const getUsers = async (request, response) => {
-//   const { email, name } = request.query;
-//   try {
-//     const users = await questionsModel.getUsers(email, name);
-//     return response.status(200).send({
-//       message: "Users data fetched successfully",
-//       data: users,
-//     });
-//   } catch (error) {
-//     response.status(500).send({
-//       message: "Error while fetching users",
-//       details: error.message,
-//     });
-//   }
-// };
+const getUserAttemptsWithAnswers = async (request, response) => {
+  const { user_id } = request.query;
+  try {
+    const result = await questionsModel.getUserAttemptsWithAnswers(user_id);
+    return response.status(200).send({
+      message: "Data fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error fetching attempts with answers",
+      details: error.message,
+    });
+  }
+};
 
 module.exports = {
   getSections,
@@ -327,4 +335,5 @@ module.exports = {
   getRoles,
   insertAdmin,
   // getUsers,
+  getUserAttemptsWithAnswers,
 };
