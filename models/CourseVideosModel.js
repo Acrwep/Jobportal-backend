@@ -1,6 +1,7 @@
 const { title } = require("process");
 const pool = require("../config/dbConfig");
 const path = require("path");
+const { constants } = require("buffer");
 
 const CourseVideosModel = {
   createContent: async (
@@ -284,6 +285,120 @@ const CourseVideosModel = {
       return result.affectedRows;
     } catch (error) {
       throw new Error("Error deleting topic: " + error.message);
+    }
+  },
+
+  insertCompanies: async (name, logo) => {
+    try {
+      const [isComapnyExists] = await pool.query(
+        `SELECT id FROM companies WHERE name = ? AND is_deleted = 0`,
+        [name]
+      );
+
+      if (isComapnyExists) {
+        throw new Error("The given company name is already exists.");
+      }
+
+      const query = `INSERT INTO companies (name, logo) VALUES (?, ?)`;
+      const values = [name, logo];
+      const [result] = await pool.query(query, values);
+      return result;
+    } catch (error) {
+      throw new Error("Error inserting companie: " + error.message);
+    }
+  },
+
+  getCompanies: async () => {
+    try {
+      const query = `SELECT id, name, logo FROM companies WHERE is_deleted = 0 ORDER BY name`;
+      const [companies] = await pool.query(query);
+      return companies;
+    } catch (error) {
+      throw new Error("Error getting companies: " + error.message);
+    }
+  },
+
+  getCompanyByCourse: async (course_id) => {
+    try {
+      const query = `SELECT
+                        c.id,
+                        c.name AS company_name,
+                        IFNULL(c.logo, '') AS logo,
+                        COUNT(CASE WHEN cc.content_type = 'document' THEN 1 END) AS document_count,
+                      COUNT(CASE WHEN cc.content_type IN('video', 'youtube') THEN 1 END) AS video_count,
+                      COUNT(cc.id) AS total_content_count
+                    FROM
+                        company_contents cc
+                    INNER JOIN companies c ON
+                        cc.course_id = c.id
+                    WHERE
+                        cc.course_id = ? AND cc.is_deleted = 0`;
+      const [companies] = await pool.query(query, [course_id]);
+      return companies;
+    } catch (error) {
+      throw new Error("Error getting companies: ", error.message);
+    }
+  },
+
+  uploadCompanyContent: async (course_id, company_id, title, contentData) => {
+    try {
+      const { type, fileName, originalname, size, mimetype, path, content } =
+        contentData;
+
+      const query = `INSERT INTO company_contents (course_id, company_id, content_type, title, filename, original_name, size, mime_type, file_path, content_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
+      const values = [
+        course_id,
+        company_id,
+        type,
+        title,
+        fileName,
+        originalname,
+        size,
+        mimetype,
+        path,
+        content,
+      ];
+
+      const [result] = await pool.query(query, values);
+      return result.insertId;
+    } catch (error) {
+      throw new Error("Error while uploading content: " + error.message);
+    }
+  },
+
+  async getCompanyContents(course_id, company_id) {
+    try {
+      const [videos] = await pool.query(
+        `SELECT
+            cc.id,
+            cc.filename,
+            cc.original_name,
+            cc.size,
+            cc.file_path,
+            cc.created_date,
+            c.name AS course_name,
+            cc.content_data,
+            cc.mime_type,
+            cc.content_type,
+            cc.title,
+            cm.name AS company_name
+        FROM
+            company_contents cc
+        INNER JOIN course c ON
+            cc.course_id = c.id
+        INNER JOIN companies cm ON
+          cc.company_id = c.id
+        WHERE
+            cc.course_id = ? AND cc.is_deleted = 0 AND cc.company_id = ?
+        ORDER BY
+            cc.created_date
+        DESC
+    `,
+        [course_id, company_id]
+      );
+      return videos;
+    } catch (error) {
+      throw new Error("Error while fetching videos: " + error.message);
     }
   },
 };

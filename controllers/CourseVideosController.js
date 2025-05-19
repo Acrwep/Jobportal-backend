@@ -256,6 +256,177 @@ class CourseVideosController {
       });
     }
   }
+
+  static async insertCompanies(request, response) {
+    const { name, logo } = request.body;
+    try {
+      const result = await CourseVideoModel.insertCompanies(name, logo);
+      return response.status(201).send({
+        message: "Company inserted successfully.",
+        result,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Error inserting companie",
+        details: error.message,
+      });
+    }
+  }
+
+  static async getCompanies(request, response) {
+    try {
+      const companies = await CourseVideoModel.getCompanies();
+      return response.status(200).send({
+        message: "Data fetched successfully.",
+        companies,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Error getting companies",
+        details: error.message,
+      });
+    }
+  }
+
+  static async getCompanyByCourse(request, response) {
+    const { course_id } = request.query;
+    try {
+      const companies = await CourseVideoModel.getCompanyByCourse(course_id);
+      return response.status(200).send({
+        message: "Companies data fetched successfully",
+        companies,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Error getting companies",
+        details: error.message,
+      });
+    }
+  }
+
+  static async uploadCompanyContent(request, response) {
+    const {
+      course_id,
+      company_id,
+      content_type,
+      content_url,
+      title,
+      document_content,
+    } = request.body;
+    try {
+      //Validate required fields
+      if (!course_id || !company_id || !content_type) {
+        return response.status(400).send({
+          message:
+            "Missing required fields (coures_id, company_id, content_type)",
+        });
+      }
+
+      let contentDate;
+
+      switch (content_type) {
+        case "video":
+          if (!request.file) {
+            return response.status(400).send({
+              message: "No video file uploaded",
+            });
+          }
+
+          contentDate = {
+            type: "video",
+            fileName: request.file.filename,
+            originalname: request.file.originalname,
+            size: request.file.size,
+            mimetype: request.file.mimetype,
+            path: `/uploads/company-contents/${request.file.filename}`,
+          };
+          break;
+
+        case "youtube":
+          if (!content_url) {
+            return response.status(400).send({
+              message: "YouTube URL is required",
+            });
+          }
+
+          contentDate = {
+            type: "youtube",
+            fileName: null,
+            originalname: null,
+            size: null,
+            mimetype: null,
+            path: content_url,
+            content: null,
+          };
+          break;
+
+        case "document":
+          if (!document_content) {
+            return response.status(400).send({
+              message: "No document file uploaded",
+            });
+          }
+
+          contentDate = {
+            type: "document",
+            fileName: null,
+            originalname: null,
+            size: null,
+            mimetype: null,
+            path: null,
+            content: document_content, // store binary data
+          };
+          break;
+
+        default:
+          return response.status(400).send({
+            message:
+              "Invalid conetnt type (must be 'video', 'youtube', or 'document')",
+          });
+      }
+
+      const contentId = await CourseVideoModel.uploadCompanyContent(
+        course_id,
+        company_id,
+        title,
+        contentDate
+      );
+
+      return response.status(201).send({
+        message: "Content uploaded successfully",
+        data: {
+          contentId,
+          type: content_type,
+          path: contentDate.path,
+        },
+      });
+    } catch (error) {
+      response.status(500).send({
+        message: "Failed to upload content",
+        details: error.message,
+      });
+    }
+  }
+
+  static async getCompanyContents(request, response) {
+    const { course_id, company_id } = request.query;
+    try {
+      const videos = await CourseVideoModel.getCompanyContents(
+        course_id,
+        company_id
+      );
+
+      return response.status(200).send({
+        message: "Videos fetched successfully",
+        videos,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Failed to fetch videos",
+        details: error.message,
+      });
+    }
+  }
 }
 
 module.exports = CourseVideosController;

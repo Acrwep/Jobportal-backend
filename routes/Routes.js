@@ -102,7 +102,7 @@ router.get(
 
 router.post(
   "/uploadContent",
-  upload.single("video"),
+  upload.uploadCourseVideo.single("video"),
   CourseVideoController.uploadContent
 );
 
@@ -111,6 +111,30 @@ router.get(
   "/user-attempts",
   verifyToken,
   questionsController.getUserAttemptsWithAnswers
+);
+
+router.post(
+  "/insertCompany",
+  verifyToken,
+  CourseVideoController.insertCompanies
+);
+router.get("/getCompanies", verifyToken, CourseVideoController.getCompanies);
+
+router.post(
+  "/uploadCompanyContent",
+  upload.uploadCompanyContent.single("video"),
+  CourseVideoController.uploadCompanyContent
+);
+router.get(
+  "/getCompanyContents",
+  verifyToken,
+  CourseVideoController.getCompanyContents
+);
+
+router.get(
+  "/getCompanyByCourse",
+  verifyToken,
+  CourseVideoController.getCompanyByCourse
 );
 
 module.exports = router;
