@@ -286,7 +286,7 @@ const updateEligibleCandidate = async (request, response) => {
 };
 
 const getUsers = async (request, response) => {
-  const { name, course_location, from_date, to_date, course_id } =
+  const { name, course_location, from_date, to_date, course_id, email } =
     request.query;
   try {
     const candidates = await candidatesModal.getUsers(
@@ -294,7 +294,8 @@ const getUsers = async (request, response) => {
       course_location,
       from_date,
       to_date,
-      course_id
+      course_id,
+      email
     );
     response.status(200).send({
       message: "All candidates data fetched successfully",

@@ -587,7 +587,14 @@ const candidatesModal = {
     }
   },
 
-  getUsers: async (name, course_location, from_date, to_date, course_id) => {
+  getUsers: async (
+    name,
+    course_location,
+    from_date,
+    to_date,
+    course_id,
+    email
+  ) => {
     try {
       let conditions = [];
       let values = [];
@@ -609,6 +616,11 @@ const candidatesModal = {
       if (course_id) {
         conditions.push("a.course_id = ?");
         values.push(course_id);
+      }
+
+      if (email) {
+        conditions.push("a.email = ?");
+        values.push(email);
       }
 
       // Always exclude Admin and Trainer roles
