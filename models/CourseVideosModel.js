@@ -262,7 +262,6 @@ const CourseVideosModel = {
         `SELECT id FROM course_topics WHERE id = ? AND is_active = 1`,
         [topic_id]
       );
-      console.log("IsExists", isTopicExists);
 
       if (isTopicExists.length === 0) {
         throw new Error("Invalid topic id");
@@ -291,11 +290,11 @@ const CourseVideosModel = {
   insertCompanies: async (name, logo) => {
     try {
       const [isComapnyExists] = await pool.query(
-        `SELECT id FROM companies WHERE name = ? AND is_deleted = 0`,
+        `SELECT id FROM companies WHERE is_deleted = 0 AND name = ?`,
         [name]
       );
 
-      if (isComapnyExists) {
+      if (isComapnyExists.length > 0) {
         throw new Error("The given company name is already exists.");
       }
 
@@ -399,6 +398,88 @@ const CourseVideosModel = {
       return videos;
     } catch (error) {
       throw new Error("Error while fetching videos: " + error.message);
+    }
+  },
+
+  getCourseByTrainers: async (user_id) => {
+    try {
+      const query = `SELECT
+                        c.id,
+                        c.name AS course_name
+                    FROM
+                        trainer_course_mapping t
+                    INNER JOIN course c ON
+                        c.id = t.course_id
+                    WHERE
+                        c.isActive = 1 AND t.is_deleted = 0 AND t.trainer_id = ?`;
+      const [courses] = await pool.query(query, user_id);
+      return courses;
+    } catch (error) {
+      throw new Error("Error while getting courses: " + error.message);
+    }
+  },
+
+  updateCompany: async (company_id, name) => {
+    try {
+      //Check whether the company id is exists
+      const [isCompanyIdExists] = await pool.query(
+        `SELECT id FROM companies WHERE id = ?`,
+        [company_id]
+      );
+
+      if (isCompanyIdExists.length === 0) {
+        throw new Error("Company not found");
+      }
+      //Check whether the company is exists
+      const [isCompanyExists] = await pool.query(
+        `SELECT id FROM companies WHERE name = ? AND id <> ?`,
+        [name, company_id]
+      );
+
+      if (isCompanyExists.length > 0) {
+        throw new Error(
+          "The given company name is already exists for another id."
+        );
+      }
+      //Update company
+      const query = `UPDATE companies SET name = ? WHERE id = ?`;
+      const [result] = await pool.query(query, [name, company_id]);
+      console.log("result", result);
+
+      return result;
+    } catch (error) {
+      throw new Error("Error while updating company: " + error.message);
+    }
+  },
+
+  deleteCompany: async (company_id) => {
+    try {
+      const [isCompanyExists] = await pool.query(
+        `SELECT id FROM companies WHERE id = ? AND is_deleted = 0`,
+        [company_id]
+      );
+
+      if (isCompanyExists.length === 0) {
+        throw new Error("Company not found");
+      }
+      const [checkCompanyContents] = await pool.query(
+        `SELECT id FROM company_contents WHERE company_id = ? AND is_deleted = 0`,
+        [company_id]
+      );
+
+      if (checkCompanyContents.length > 0) {
+        throw new Error(
+          "Unable to remove the company because it contains content."
+        );
+      }
+
+      const [result] = await pool.query(
+        `UPDATE companies SET is_deleted = 1 WHERE id = ?`,
+        [company_id]
+      );
+      return result.affectedRows;
+    } catch (error) {
+      throw new Error("Error deleting company: " + error.message);
     }
   },
 };

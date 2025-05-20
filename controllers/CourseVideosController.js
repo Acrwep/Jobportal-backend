@@ -427,6 +427,54 @@ class CourseVideosController {
       });
     }
   }
+
+  static async getCourseByTrainers(request, response) {
+    const { user_id } = request.query;
+    try {
+      const courses = await CourseVideoModel.getCourseByTrainers(user_id);
+      return response.status(200).send({
+        message: "Courses fetched successfully",
+        courses,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Failed to fetch courses",
+        details: error.message,
+      });
+    }
+  }
+
+  static async updateCompany(request, response) {
+    const { company_id, name } = request.body;
+    try {
+      const result = await CourseVideoModel.updateCompany(company_id, name);
+      return response.status(200).send({
+        message: "Company updated successfully",
+        result,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Error updating company",
+        details: error.message,
+      });
+    }
+  }
+
+  static async deleteCompany(request, response) {
+    const { company_id } = request.query;
+    try {
+      const result = await CourseVideoModel.deleteCompany(company_id);
+      return response.status(200).send({
+        message: "Company has been removed successfully",
+        result,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        message: "Error removing company",
+        details: error.message,
+      });
+    }
+  }
 }
 
 module.exports = CourseVideosController;

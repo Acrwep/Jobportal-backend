@@ -137,4 +137,17 @@ router.get(
   CourseVideoController.getCompanyByCourse
 );
 
+router.get(
+  "/getCourseByTrainers",
+  verifyToken,
+  CourseVideoController.getCourseByTrainers
+);
+
+router.put("/updateCompany", verifyToken, CourseVideoController.updateCompany);
+router.delete(
+  "/deleteCompany",
+  verifyToken,
+  CourseVideoController.deleteCompany
+);
+
 module.exports = router;
