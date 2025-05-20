@@ -118,7 +118,13 @@ router.post(
   verifyToken,
   CourseVideoController.insertCompanies
 );
-router.get("/getCompanies", verifyToken, CourseVideoController.getCompanies);
+// router.get("/getCompanies", verifyToken, CourseVideoController.getCompanies);
+
+router.get(
+  "/getCompanyByCourse",
+  verifyToken,
+  CourseVideoController.getCompanyByCourse
+);
 
 router.post(
   "/uploadCompanyContent",
@@ -132,12 +138,6 @@ router.get(
 );
 
 router.get(
-  "/getCompanyByCourse",
-  verifyToken,
-  CourseVideoController.getCompanyByCourse
-);
-
-router.get(
   "/getCourseByTrainers",
   verifyToken,
   CourseVideoController.getCourseByTrainers
@@ -148,6 +148,11 @@ router.delete(
   "/deleteCompany",
   verifyToken,
   CourseVideoController.deleteCompany
+);
+
+router.delete(
+  "/deleteCompanyContent",
+  CourseVideoController.deleteCompanyContent
 );
 
 module.exports = router;

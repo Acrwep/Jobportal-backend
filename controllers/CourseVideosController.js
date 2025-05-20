@@ -258,9 +258,13 @@ class CourseVideosController {
   }
 
   static async insertCompanies(request, response) {
-    const { name, logo } = request.body;
+    const { name, logo, course_id } = request.body;
     try {
-      const result = await CourseVideoModel.insertCompanies(name, logo);
+      const result = await CourseVideoModel.insertCompanies(
+        name,
+        logo,
+        course_id
+      );
       return response.status(201).send({
         message: "Company inserted successfully.",
         result,
@@ -273,20 +277,20 @@ class CourseVideosController {
     }
   }
 
-  static async getCompanies(request, response) {
-    try {
-      const companies = await CourseVideoModel.getCompanies();
-      return response.status(200).send({
-        message: "Data fetched successfully.",
-        companies,
-      });
-    } catch (error) {
-      return response.status(500).send({
-        message: "Error getting companies",
-        details: error.message,
-      });
-    }
-  }
+  // static async getCompanies(request, response) {
+  //   try {
+  //     const companies = await CourseVideoModel.getCompanies();
+  //     return response.status(200).send({
+  //       message: "Data fetched successfully.",
+  //       companies,
+  //     });
+  //   } catch (error) {
+  //     return response.status(500).send({
+  //       message: "Error getting companies",
+  //       details: error.message,
+  //     });
+  //   }
+  // }
 
   static async getCompanyByCourse(request, response) {
     const { course_id } = request.query;
@@ -305,20 +309,13 @@ class CourseVideosController {
   }
 
   static async uploadCompanyContent(request, response) {
-    const {
-      course_id,
-      company_id,
-      content_type,
-      content_url,
-      title,
-      document_content,
-    } = request.body;
+    const { company_id, content_type, content_url, title, document_content } =
+      request.body;
     try {
       //Validate required fields
-      if (!course_id || !company_id || !content_type) {
+      if (!company_id || !content_type) {
         return response.status(400).send({
-          message:
-            "Missing required fields (coures_id, company_id, content_type)",
+          message: "Missing required fields (company_id, content_type)",
         });
       }
 
@@ -386,7 +383,6 @@ class CourseVideosController {
       }
 
       const contentId = await CourseVideoModel.uploadCompanyContent(
-        course_id,
         company_id,
         title,
         contentDate
@@ -409,12 +405,9 @@ class CourseVideosController {
   }
 
   static async getCompanyContents(request, response) {
-    const { course_id, company_id } = request.query;
+    const { company_id } = request.query;
     try {
-      const videos = await CourseVideoModel.getCompanyContents(
-        course_id,
-        company_id
-      );
+      const videos = await CourseVideoModel.getCompanyContents(company_id);
 
       return response.status(200).send({
         message: "Videos fetched successfully",
@@ -471,6 +464,29 @@ class CourseVideosController {
     } catch (error) {
       return response.status(500).send({
         message: "Error removing company",
+        details: error.message,
+      });
+    }
+  }
+
+  static async deleteCompanyContent(request, response) {
+    const { filename, id } = request.query;
+    try {
+      if (filename) {
+        const filePath = path.join(
+          __dirname,
+          `../uploads/company-contents/${filename}`
+        );
+        await fs.unlink(filePath);
+      }
+      const result = await CourseVideoModel.deleteCompanyContent(id);
+      response.status(200).send({
+        message: "Content has been deleted",
+        result,
+      });
+    } catch (error) {
+      response.status(500).send({
+        message: "Error deleting content",
         details: error.message,
       });
     }
