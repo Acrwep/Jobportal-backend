@@ -335,7 +335,7 @@ const CourseVideosModel = {
                     LEFT JOIN company_contents cc 
                         ON c.id = cc.company_id AND cc.is_deleted = 0
                     WHERE
-                        c.course_id = ?
+                        c.course_id = ? AND c.is_deleted = 0
                     GROUP BY
                         c.id, c.name, c.logo;`;
       const [companies] = await pool.query(query, [course_id]);
@@ -424,7 +424,7 @@ const CourseVideosModel = {
     }
   },
 
-  updateCompany: async (company_id, name, logo) => {
+  updateCompany: async (company_id, name, logo, course_id) => {
     try {
       //Check whether the company id is exists
       const [isCompanyIdExists] = await pool.query(
@@ -437,9 +437,10 @@ const CourseVideosModel = {
       }
       //Check whether the company is exists
       const [isCompanyExists] = await pool.query(
-        `SELECT id FROM companies WHERE name = ? AND id <> ?`,
-        [name, company_id]
+        `SELECT id FROM companies WHERE name = ? AND id <> ? AND course_id = ?`,
+        [name, company_id, course_id]
       );
+      console.log("isCompanyExists", isCompanyExists);
 
       if (isCompanyExists.length > 0) {
         throw new Error(
@@ -448,7 +449,7 @@ const CourseVideosModel = {
       }
       //Update company
       const query = `UPDATE companies SET name = ?, logo = ? WHERE id = ?`;
-      const [result] = await pool.query(query, [name, company_id, logo]);
+      const [result] = await pool.query(query, [name, logo, company_id]);
       console.log("result", result);
 
       return result;

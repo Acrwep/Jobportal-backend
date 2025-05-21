@@ -438,12 +438,13 @@ class CourseVideosController {
   }
 
   static async updateCompany(request, response) {
-    const { company_id, name, logo } = request.body;
+    const { company_id, name, logo, course_id } = request.body;
     try {
       const result = await CourseVideoModel.updateCompany(
         company_id,
         name,
-        logo
+        logo,
+        course_id
       );
       return response.status(200).send({
         message: "Company updated successfully",
