@@ -139,7 +139,7 @@ const CourseVideosModel = {
         conditions.push("course_id = ?");
         values.push(course_id);
       }
-      let query = `SELECT id, course_id, name FROM course_topics WHERE is_active = 1`;
+      let query = `SELECT id, course_id, name FROM course_topics WHERE is_active = 1 ORDER BY id`;
 
       if (conditions.length > 0) {
         query += " AND " + conditions.join(" AND ");
