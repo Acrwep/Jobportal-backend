@@ -89,7 +89,7 @@ const CourseVideosModel = {
   insertCourseTopics: async (course_id, topics) => {
     try {
       const [isTopicExists] = await pool.query(
-        `SELECT id FROM course_topics WHERE course_id = ? AND name = ?`,
+        `SELECT id FROM course_topics WHERE course_id = ? AND name = ? AND is_active = 1`,
         [course_id, topics]
       );
 
