@@ -116,7 +116,7 @@ const CourseVideosModel = {
       }
       //Check whether the topic is exists
       const [isTopicExists] = await pool.query(
-        `SELECT id FROM course_topics WHERE name = ? AND id <> ? AND course_id = ?`,
+        `SELECT id FROM course_topics WHERE name = ? AND id <> ? AND course_id = ? AND is_active = 1`,
         [topic, topic_id, coures_id]
       );
       if (isTopicExists.length > 0) {
