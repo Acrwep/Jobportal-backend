@@ -139,12 +139,12 @@ const CourseVideosModel = {
         conditions.push("course_id = ?");
         values.push(course_id);
       }
-      let query = `SELECT id, course_id, name FROM course_topics WHERE is_active = 1 ORDER BY id`;
+      let query = `SELECT id, course_id, name FROM course_topics WHERE is_active = 1`;
 
       if (conditions.length > 0) {
         query += " AND " + conditions.join(" AND ");
       }
-      query += " ORDER BY name";
+      query += " ORDER BY id";
       const [topics] = await pool.query(query, values);
       return topics;
     } catch (error) {
