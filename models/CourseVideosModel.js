@@ -424,7 +424,7 @@ const CourseVideosModel = {
     }
   },
 
-  updateCompany: async (company_id, name) => {
+  updateCompany: async (company_id, name, logo) => {
     try {
       //Check whether the company id is exists
       const [isCompanyIdExists] = await pool.query(
@@ -447,8 +447,8 @@ const CourseVideosModel = {
         );
       }
       //Update company
-      const query = `UPDATE companies SET name = ? WHERE id = ?`;
-      const [result] = await pool.query(query, [name, company_id]);
+      const query = `UPDATE companies SET name = ?, logo = ? WHERE id = ?`;
+      const [result] = await pool.query(query, [name, company_id, logo]);
       console.log("result", result);
 
       return result;
