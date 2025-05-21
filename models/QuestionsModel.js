@@ -374,7 +374,12 @@ const QuestionsModel = {
               q.question,
               ua.selected_option,
               ua.mark,
-              q.section_id
+              q.section_id,
+              q.correct_answer,
+              q.option_a,
+              q.option_b,
+              q.option_c,
+              q.option_d
           FROM
               user_answers ua
           INNER JOIN questions q ON
@@ -391,10 +396,26 @@ const QuestionsModel = {
             ? Math.round((correctAnswers / totalQuestions) * 100)
             : 0;
 
+        // Transform answers to include options object
+        const transformedAnswers = answers.map((answer) => ({
+          question_id: answer.question_id,
+          question: answer.question,
+          selected_option: answer.selected_option,
+          correct_answer: answer.correct_answer,
+          mark: answer.mark,
+          section_id: answer.section_id,
+          options: {
+            option_a: answer.option_a || "",
+            option_b: answer.option_b || "",
+            option_c: answer.option_c || "",
+            option_d: answer.option_d || "",
+          },
+        }));
+
         attempt.total_questions = totalQuestions;
         attempt.correct_answers = correctAnswers;
         attempt.percentage = percentage;
-        attempt.answers = answers;
+        attempt.answers = transformedAnswers;
       }
 
       return attempts;
