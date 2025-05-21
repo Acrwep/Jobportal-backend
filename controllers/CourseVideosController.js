@@ -175,9 +175,13 @@ class CourseVideosController {
   }
 
   static async updateCourseTopics(request, response) {
-    const { topic_id, topic } = request.body;
+    const { topic_id, course_id, topic } = request.body;
     try {
-      const result = await CourseVideoModel.updateCourseTopics(topic_id, topic);
+      const result = await CourseVideoModel.updateCourseTopics(
+        topic_id,
+        course_id,
+        topic
+      );
       return response.status(200).send({
         message: "Topic updated successfully",
         result,

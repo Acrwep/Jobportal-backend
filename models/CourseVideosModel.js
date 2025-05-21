@@ -104,7 +104,7 @@ const CourseVideosModel = {
     }
   },
 
-  updateCourseTopics: async (topic_id, topic) => {
+  updateCourseTopics: async (topic_id, coures_id, topic) => {
     try {
       //Check whether the topic id is exists
       const [isTopicIdExists] = await pool.query(
@@ -116,8 +116,8 @@ const CourseVideosModel = {
       }
       //Check whether the topic is exists
       const [isTopicExists] = await pool.query(
-        `SELECT id FROM course_topics WHERE name = ? AND id <> ?`,
-        [topic, topic_id]
+        `SELECT id FROM course_topics WHERE name = ? AND id <> ? AND course_id = ?`,
+        [topic, topic_id, coures_id]
       );
       if (isTopicExists.length > 0) {
         throw new Error("The given topic is already exists for another id.");
