@@ -20,6 +20,7 @@ const login = async (request, response) => {
           id: result.id,
           name: result.name,
           email: result.email,
+          role_id: result.role_id,
           role: result.role,
           token: Token,
         },
