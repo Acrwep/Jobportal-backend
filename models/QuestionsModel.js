@@ -435,21 +435,29 @@ const QuestionsModel = {
             ? Math.round((correctAnswers / totalQuestions) * 100)
             : 0;
 
-        // Transform answers to include options object
-        const transformedAnswers = answers.map((answer) => ({
-          question_id: answer.question_id,
-          question: answer.question,
-          selected_option: answer.selected_option,
-          correct_answer: answer.correct_answer,
-          mark: answer.mark,
-          section_id: answer.section_id,
-          options: {
-            option_a: answer.option_a || "",
-            option_b: answer.option_b || "",
-            option_c: answer.option_c || "",
-            option_d: answer.option_d || "",
-          },
-        }));
+        // Transform answers to include options array
+        const transformedAnswers = answers.map((answer) => {
+          // Create options array in the desired format
+          const options = [];
+          if (answer.option_a)
+            options.push({ name: "option_a", value: answer.option_a });
+          if (answer.option_b)
+            options.push({ name: "option_b", value: answer.option_b });
+          if (answer.option_c)
+            options.push({ name: "option_c", value: answer.option_c });
+          if (answer.option_d)
+            options.push({ name: "option_d", value: answer.option_d });
+
+          return {
+            question_id: answer.question_id,
+            question: answer.question,
+            selected_option: answer.selected_option,
+            correct_answer: answer.correct_answer,
+            mark: answer.mark,
+            section_id: answer.section_id,
+            options: options,
+          };
+        });
 
         attempt.total_questions = totalQuestions;
         attempt.correct_answers = correctAnswers;
