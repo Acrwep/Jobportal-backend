@@ -21,6 +21,7 @@ const login = async (request, response) => {
           name: result.name,
           email: result.email,
           role_id: result.role_id,
+          course_id: result.course_id,
           role: result.role,
           token: Token,
         },
