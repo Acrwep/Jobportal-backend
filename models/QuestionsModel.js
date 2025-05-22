@@ -13,11 +13,19 @@ const QuestionsModel = {
   },
 
   //Get courses list
-  getCourses: async () => {
+  getCourses: async (courses) => {
     try {
-      const query = `SELECT id, name FROM course WHERE isActive = 1`;
-      const [courses] = await pool.query(query);
-      return courses;
+      let query = `SELECT id, name FROM course WHERE isActive = 1`;
+      let values = [];
+
+      // Check if courses is an array and has values
+      if (Array.isArray(courses) && courses.length > 0) {
+        const placeholders = courses.map(() => "?").join(", ");
+        query += ` AND id IN (${placeholders})`;
+        values = courses;
+      }
+      const [result] = await pool.query(query, values);
+      return result;
     } catch (error) {
       throw new Error("Error getting courses: " + error.message);
     }
@@ -127,17 +135,48 @@ const QuestionsModel = {
   //     }
   // },
 
-  getQuestionsWithOptions: async (course_id, section_id) => {
-    const queryd = `SELECT q.id AS question_id, q.course_id, c.name AS course_name, q.correct_answer, section_id, s.name as section_name, question, option_a, option_b, option_c, option_d FROM questions q LEFT JOIN section s on q.section_id = s.id LEFT JOIN course c on c.id = q.course_id WHERE q.is_active = 1 AND (${
-      course_id === undefined ? null : course_id
-    } IS NULL OR course_id = ?) AND (${
-      section_id === undefined ? null : section_id
-    } IS NULL OR section_id = ?)`;
-
+  getQuestionsWithOptions: async (courses, section_id) => {
     try {
-      // 1. First get all questions
-      const values = [course_id, section_id];
-      const [questions] = await pool.query(queryd, values);
+      let conditions = ["q.is_active = 1"];
+      let values = [];
+
+      // Handle multiple courses
+      if (Array.isArray(courses) && courses.length > 0) {
+        const placeholders = courses.map(() => "?").join(", ");
+        conditions.push(`q.course_id IN (${placeholders})`);
+        values.push(...courses);
+      }
+
+      // Handle optional section_id
+      if (section_id) {
+        conditions.push("q.section_id = ?");
+        values.push(section_id);
+      }
+
+      let query = `
+      SELECT 
+        q.id AS question_id, 
+        q.course_id, 
+        c.name AS course_name, 
+        q.correct_answer, 
+        q.section_id, 
+        s.name AS section_name, 
+        q.question, 
+        q.option_a, 
+        q.option_b, 
+        q.option_c, 
+        q.option_d
+      FROM 
+        questions q
+      LEFT JOIN 
+        section s ON q.section_id = s.id
+      LEFT JOIN 
+        course c ON c.id = q.course_id
+      WHERE 
+        ${conditions.join(" AND ")}
+    `;
+
+      const [questions] = await pool.query(query, values);
       return questions;
     } catch (error) {
       throw new Error(`Failed to get questions with options: ${error.message}`);

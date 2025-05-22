@@ -20,12 +20,13 @@ const getSections = async (request, response) => {
 };
 
 const getCourses = async (request, response) => {
+  const { courses } = request.body;
   try {
-    const courses = await questionsModel.getCourses();
+    const result = await questionsModel.getCourses(courses);
 
     response.status(200).json({
       message: "Course date fetched successfully",
-      data: courses,
+      data: result,
     });
   } catch (error) {
     console.error("Error in getCourses:", error);
@@ -119,10 +120,10 @@ const insertQuestion = async (request, response) => {
 // };
 
 const getQuestions = async (request, response) => {
-  const { course_id, section_id } = request.query;
+  const { courses, section_id } = request.body;
   try {
     const questionsWithOptions = await questionsModel.getQuestionsWithOptions(
-      course_id,
+      courses,
       section_id
     );
     response.status(200).send({

@@ -48,14 +48,14 @@ router.get(
   AdminController.getFavoriteCandidates
 );
 router.get("/getsection", verifyToken, questionsController.getSections);
-router.get("/getcourses", questionsController.getCourses);
+router.post("/getcourses", questionsController.getCourses);
 router.post(
   "/insertQuestions",
   verifyToken,
   questionsController.insertQuestion
 );
 // router.post("/insertoption", verifyToken, questionsController.insertOptions);
-router.get("/getquestions", verifyToken, questionsController.getQuestions);
+router.post("/getquestions", verifyToken, questionsController.getQuestions);
 router.post(
   "/updateQuestions",
   verifyToken,
