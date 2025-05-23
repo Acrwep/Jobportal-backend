@@ -87,6 +87,10 @@ async function sendTestLinks(users) {
            VALUES (?, ?, 'sent', ?, ?)`,
           [recipientEmail, "Your Test Invitation", user.id, user.course_id]
         );
+
+        const query = `INSERT INTO assessment_link_log(user_id, test_link, status) VALUES (?, ?, ?)`;
+        const [result] = await pool.query(query, [user.id, testLink, "New"]);
+        return result;
       } catch (error) {
         // Log failed email to database
         await pool.query(
@@ -109,4 +113,40 @@ async function sendTestLinks(users) {
   }
 }
 
-module.exports = { sendTestLinks };
+const readTestLink = async (id) => {
+  try {
+    const query = `UPDATE assessment_link_log SET status = 'Read' WHERE id = ?`;
+    const [result] = await pool.query(query, [id]);
+    return result.affectedRows;
+  } catch (error) {
+    throw new Error("Error while reading test links:" + error.message);
+  }
+};
+
+const getTestLinkByUser = async (user_id) => {
+  try {
+    const query = `SELECT
+                      id,
+                      user_id,
+                      test_link,
+                      status,
+                      CASE WHEN status = 'New' THEN 1 ELSE 0 END AS unread_count,
+                      CASE WHEN status = 'Read' THEN 1 ELSE 0 END AS read_count,
+                      created_date
+                  FROM
+                      assessment_link_log
+                  WHERE
+                      user_id = ? ORDER BY created_date;`;
+
+    const [testLinks] = await pool.query(query, [user_id]);
+    return testLinks;
+  } catch (error) {
+    throw new Error("Error while fetching test links: " + error.message);
+  }
+};
+
+module.exports = {
+  sendTestLinks,
+  readTestLink,
+  getTestLinkByUser,
+};

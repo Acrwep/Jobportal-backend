@@ -155,4 +155,11 @@ router.delete(
   CourseVideoController.deleteCompanyContent
 );
 
+router.put("/readTestLink", verifyToken, emailController.readTestLink);
+router.get(
+  "/getTestLinkByUser",
+  verifyToken,
+  emailController.getTestLinkByUser
+);
+
 module.exports = router;
