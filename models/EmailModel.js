@@ -126,20 +126,39 @@ const readTestLink = async (id) => {
 const getTestLinkByUser = async (user_id) => {
   try {
     const query = `SELECT
-                      id,
-                      user_id,
-                      test_link,
-                      status,
-                      CASE WHEN status = 'New' THEN 1 ELSE 0 END AS unread_count,
-                      CASE WHEN status = 'Read' THEN 1 ELSE 0 END AS read_count,
-                      created_date
+                    id,
+                    user_id,
+                    test_link,
+                    status,
+                    created_date
                   FROM
-                      assessment_link_log
+                    assessment_link_log
                   WHERE
-                      user_id = ? ORDER BY created_date;`;
+                    user_id = ? 
+                  ORDER BY created_date;`;
 
     const [testLinks] = await pool.query(query, [user_id]);
-    return testLinks;
+
+    // Calculate counts
+    const unreadCount = testLinks.filter(
+      (link) => link.status === "New"
+    ).length;
+    const readCount = testLinks.filter((link) => link.status === "Read").length;
+
+    // Transform the response structure
+    const transformedResponse = {
+      unread_count: unreadCount,
+      read_count: readCount,
+      links: testLinks.map((link) => ({
+        id: link.id,
+        user_id: link.user_id,
+        test_link: link.test_link,
+        status: link.status,
+        created_date: link.created_date,
+      })),
+    };
+
+    return transformedResponse;
   } catch (error) {
     throw new Error("Error while fetching test links: " + error.message);
   }

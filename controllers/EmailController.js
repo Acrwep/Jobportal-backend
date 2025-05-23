@@ -43,7 +43,7 @@ const getTestLinkByUser = async (request, response) => {
     const testLinks = await emailModal.getTestLinkByUser(user_id);
     return response.status(200).send({
       message: "Test link fetched successfully",
-      testLinks,
+      data: testLinks,
     });
   } catch (error) {
     response.status(500).send({
