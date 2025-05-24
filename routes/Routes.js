@@ -161,5 +161,8 @@ router.get(
   verifyToken,
   emailController.getTestLinkByUser
 );
+router.get("/sendOTP", emailController.sendOTP);
+router.get("/validateOTP", emailController.validateOTP);
+router.put("/forgotPassword", emailController.forgotPassword);
 
 module.exports = router;

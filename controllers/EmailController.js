@@ -53,8 +53,59 @@ const getTestLinkByUser = async (request, response) => {
   }
 };
 
+const sendOTP = async (request, response) => {
+  const { email } = request.query;
+  try {
+    if (!email) throw new Error("Email is required.");
+    const result = await emailModal.sendOTP(email);
+    return response.status(200).send({
+      message: "OTP sent successfully to your email.",
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while sending otp",
+      details: error.message,
+    });
+  }
+};
+
+const validateOTP = async (request, response) => {
+  const { email, otp } = request.query;
+  try {
+    const result = await emailModal.validateOTP(email, otp);
+    return response.status(200).send({
+      message: "OTP validated successfully",
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while validating otp",
+      details: error.message,
+    });
+  }
+};
+
+const forgotPassword = async (request, response) => {
+  const { password, email } = request.body;
+  try {
+    const result = await emailModal.forgotPassword(password, email);
+    return response.status(200).send({
+      message: "Password has been changed successfully",
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while updating password",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   sendTestLinks,
   readTestLink,
   getTestLinkByUser,
+  sendOTP,
+  validateOTP,
+  forgotPassword,
 };

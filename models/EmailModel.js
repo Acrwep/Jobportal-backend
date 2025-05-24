@@ -164,8 +164,97 @@ const getTestLinkByUser = async (user_id) => {
   }
 };
 
+const sendOTP = async (email) => {
+  try {
+    const [getUser] = await pool.query(
+      `SELECT id, email, name FROM admin WHERE email = ? AND is_active = 1`,
+      [email]
+    );
+    if (getUser.length === 0) {
+      throw new Error("Error! Your email is not available in the database.");
+    }
+    const recipientEmail = getUser[0].email;
+    const candidateName = getUser[0].name;
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const tenMinutesInMs = 5 * 60 * 1000;
+    const expiresAt = new Date(Date.now() + tenMinutesInMs);
+    const localFormat = moment(expiresAt).format("YYYY-MM-DD HH:mm:ss");
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: recipientEmail,
+      subject: "Your OTP Code",
+      html: `<div>
+            <p>Dear ${candidateName},</p>
+            <p>Your One Time Password (OTP) is <span style=""font-weight: 600;margin-top:6px"">${otp}</span>. This OTP will be valid for next 5 mins.</p>
+
+            <div style=""font-size: 14px;color:#222;"">
+            <p style=""margin-bottom: 0px;"">Best Regards,</p>
+            <p style=""margin-top: 2px;"">ACTE Placement</p>
+            </div>
+            </div>`,
+    });
+
+    await pool.query(
+      "INSERT INTO otp_logs (user_id, email, otp_code, expires_at) VALUES (?, ?, ?, ?)",
+      [getUser[0].id, email, otp, localFormat]
+    );
+  } catch (error) {
+    throw new Error("Error while sending otp:" + error.message);
+  }
+};
+
+const validateOTP = async (email, otp) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT * FROM otp_logs 
+     WHERE email = ? AND otp_code = ? 
+     ORDER BY created_at DESC LIMIT 1`,
+      [email, otp]
+    );
+
+    const otpEntry = rows[0];
+    if (!otpEntry) throw new Error("Invalid OTP");
+
+    if (otpEntry.is_used) throw new Error("OTP already used");
+
+    if (new Date() > new Date(otpEntry.expires_at)) {
+      // Optionally resend OTP
+      throw new Error("OTP expired. Please request a new one.");
+    }
+
+    const [updateOTP] = await pool.query(
+      `UPDATE otp_logs SET is_used = 1 WHERE id = ?`,
+      [otpEntry.id]
+    );
+    return updateOTP.affectedRows;
+  } catch (error) {
+    throw new Error("Error while validating otp:" + error.message);
+  }
+};
+
+const forgotPassword = async (password, email) => {
+  try {
+    const [checkEmail] = await pool.query(
+      `SELECT email FROM admin WHERE email = ? AND is_active = 1`,
+      [email]
+    );
+    if (checkEmail.length === 0) throw new Error("Invalid email");
+    const [result] = await pool.query(
+      `UPDATE admin SET password = ? WHERE email = ? AND is_active = 1`,
+      [password, email]
+    );
+    return result.affectedRows;
+  } catch (error) {
+    throw new Error("Error while updating password:" + error.message);
+  }
+};
+
 module.exports = {
   sendTestLinks,
   readTestLink,
   getTestLinkByUser,
+  sendOTP,
+  validateOTP,
+  forgotPassword,
 };
