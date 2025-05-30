@@ -258,15 +258,7 @@ const insertAdmin = async (request, response) => {
     profile,
   } = request.body;
   // Validate required fields
-  if (
-    !name ||
-    !email ||
-    !password ||
-    !role_id ||
-    !course_id ||
-    !experience ||
-    !profile
-  ) {
+  if (!name || !email || !password || !role_id || !course_id || !experience) {
     return response.status(400).json({
       message: "Missing required fields",
       required: [

@@ -31,7 +31,7 @@ const login = async (request, response) => {
     }
   } catch (error) {
     console.log("login error", error);
-    response.status(500).send({ message: "Error while login" });
+    response.status(500).send({ message: "Error while login", details: error });
   }
 };
 
