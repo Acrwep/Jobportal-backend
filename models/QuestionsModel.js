@@ -470,5 +470,36 @@ const QuestionsModel = {
       throw new Error("Error getting candidate questions: " + error.message);
     }
   },
+
+  updateUser: async (
+    id,
+    name,
+    email,
+    password,
+    experience,
+    profile,
+    role_id,
+    course_id,
+    location_id
+  ) => {
+    try {
+      const query = `UPDATE admin SET name = ?, email = ?, password = ?, experience = ?, profile = ?, role_id = ?, course_id = ?, location_id = ? WHERE id = ?`;
+      const values = [
+        name,
+        email,
+        password,
+        experience,
+        profile,
+        role_id,
+        course_id,
+        location_id,
+        id,
+      ];
+      const [result] = await pool.query(query, values);
+      return result.affectedRows;
+    } catch (error) {
+      throw new Error("Error while updating user: " + error.message);
+    }
+  },
 };
 module.exports = QuestionsModel;

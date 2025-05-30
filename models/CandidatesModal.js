@@ -630,6 +630,8 @@ const candidatesModal = {
                     a.id,
                     a.name,
                     a.email,
+                    a.password,
+                    a.profile,
                     l.name AS course_location,
                     a.course_join_date,
                     cr.name AS course_name,

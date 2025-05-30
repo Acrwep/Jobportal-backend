@@ -322,6 +322,57 @@ const getUserAttemptsWithAnswers = async (request, response) => {
   }
 };
 
+const updateUser = async (request, response) => {
+  const {
+    id,
+    name,
+    email,
+    password,
+    experience,
+    role_id,
+    course_id,
+    profile,
+    location_id,
+  } = request.body;
+  if (!name || !email || !password) {
+    return response.status(400).json({
+      message: "Missing required fields",
+      required: [
+        "name",
+        "email",
+        "password",
+        "role_id",
+        "course_id",
+        "location_id",
+        "experience",
+        "profile",
+      ],
+    });
+  }
+  try {
+    const result = await questionsModel.updateUser(
+      id,
+      name,
+      email,
+      password,
+      experience,
+      profile,
+      role_id,
+      course_id,
+      location_id
+    );
+    return response.status(200).send({
+      message: "User updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error updating user",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getSections,
   getCourses,
@@ -335,4 +386,5 @@ module.exports = {
   insertAdmin,
   // getUsers,
   getUserAttemptsWithAnswers,
+  updateUser,
 };
