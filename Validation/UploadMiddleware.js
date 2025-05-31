@@ -2,20 +2,47 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Common file filter for both upload instances
+let isVideo;
+let isDocument;
+
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    "video/mp4",
-    "video/quicktime",
-    "video/x-msvideo",
-    "video/x-matroska",
-    "video/webm",
-  ];
-  if (allowedTypes.includes(file.mimetype)) {
+  const typeCategories = {
+    video: [
+      "video/mp4",
+      "video/quicktime", // MOV
+      "video/x-msvideo", // AVI
+      "video/x-matroska", // MKV
+      "video/webm",
+    ],
+    document: [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/plain",
+      "text/csv",
+      "application/rtf",
+    ],
+  };
+
+  isVideo = typeCategories.video.includes(file.mimetype);
+  isDocument = typeCategories.document.includes(file.mimetype);
+
+  if (isVideo || isDocument) {
+    // Attach file type to request for later use
+    req.fileType = isVideo ? "video" : "document";
     cb(null, true);
   } else {
+    const allowedFormats = [
+      ...typeCategories.video.map((v) => v.split("/")[1]),
+      ...typeCategories.document.map((d) => d.split("/").pop()),
+    ].join(", ");
+
     cb(
-      new Error("Only video files are allowed (MP4, MOV, AVI, MKV, WEBM)"),
+      new Error(`Unsupported file type. Allowed formats: ${allowedFormats}`),
       false
     );
   }
@@ -33,7 +60,8 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const ext = path.extname(file.originalname);
-    cb(null, `video-${uniqueSuffix}${ext}`);
+    if (isVideo) cb(null, `video-${uniqueSuffix}${ext}`);
+    if (isDocument) cb(null, `document-${uniqueSuffix}${ext}`);
   },
 });
 
@@ -49,7 +77,8 @@ const companyStorage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const ext = path.extname(file.originalname);
-    cb(null, `video-${uniqueSuffix}${ext}`);
+    if (isVideo) cb(null, `video-${uniqueSuffix}${ext}`);
+    if (isDocument) cb(null, `document-${uniqueSuffix}${ext}`);
   },
 });
 

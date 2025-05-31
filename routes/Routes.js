@@ -102,7 +102,7 @@ router.get(
 
 router.post(
   "/uploadContent",
-  upload.uploadCourseVideo.single("video"),
+  upload.uploadCourseVideo.single("content"),
   CourseVideoController.uploadContent
 );
 
@@ -128,7 +128,7 @@ router.get(
 
 router.post(
   "/uploadCompanyContent",
-  upload.uploadCompanyContent.single("video"),
+  upload.uploadCompanyContent.single("content"),
   CourseVideoController.uploadCompanyContent
 );
 router.get(

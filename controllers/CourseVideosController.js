@@ -14,7 +14,6 @@ class CourseVideosController {
       content_type,
       content_url,
       title,
-      document_content,
     } = request.body;
     try {
       //Validate required fields
@@ -64,7 +63,7 @@ class CourseVideosController {
           break;
 
         case "document":
-          if (!document_content) {
+          if (!request.file) {
             return response.status(400).send({
               message: "No document file uploaded",
             });
@@ -72,12 +71,11 @@ class CourseVideosController {
 
           contentDate = {
             type: "document",
-            fileName: null,
-            originalname: null,
-            size: null,
-            mimetype: null,
-            path: null,
-            content: document_content, // store binary data
+            fileName: request.file.filename,
+            originalname: request.file.originalname,
+            size: request.file.size,
+            mimetype: request.file.mimetype,
+            path: `/uploads/course-videos/${request.file.filename}`,
           };
           break;
 
@@ -313,7 +311,7 @@ class CourseVideosController {
   }
 
   static async uploadCompanyContent(request, response) {
-    const { company_id, content_type, content_url, title, document_content } =
+    const { company_id, content_type, content_url, title, document } =
       request.body;
     try {
       //Validate required fields
@@ -362,7 +360,7 @@ class CourseVideosController {
           break;
 
         case "document":
-          if (!document_content) {
+          if (!request.file) {
             return response.status(400).send({
               message: "No document file uploaded",
             });
@@ -370,12 +368,11 @@ class CourseVideosController {
 
           contentDate = {
             type: "document",
-            fileName: null,
-            originalname: null,
-            size: null,
-            mimetype: null,
-            path: null,
-            content: document_content, // store binary data
+            fileName: request.file.filename,
+            originalname: request.file.originalname,
+            size: request.file.size,
+            mimetype: request.file.mimetype,
+            path: `/uploads/company-contents/${request.file.filename}`,
           };
           break;
 
@@ -499,6 +496,11 @@ class CourseVideosController {
         details: error.message,
       });
     }
+  }
+
+  static base64Encode(file) {
+    var body = fs.readFileSync(file);
+    return body.toString("base64");
   }
 }
 
