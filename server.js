@@ -5,10 +5,8 @@ const cors = require("cors");
 const path = require("path");
 
 const app = express();
-app.use(express.json({ limit: "50mb" }));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Enable CORS if your frontend is running on a different port, like 3001
+// ✅ Enable CORS early — before static files or any route
 app.use(
   cors({
     origin: ["http://localhost:3001", "https://placement.acte.in"],
@@ -18,7 +16,12 @@ app.use(
   })
 );
 
-//use the routes
+app.use(express.json({ limit: "50mb" }));
+
+// ✅ Serve static files *after* CORS is enabled
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Use your routes
 app.use("/api", Routes);
 
 // Catch all undefined routes
