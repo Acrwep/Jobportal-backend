@@ -365,6 +365,53 @@ const updateUser = async (request, response) => {
   }
 };
 
+const bulkInsertQuestions = async (request, response) => {
+  const { questions } = request.body; // Expect array of question objects
+
+  try {
+    // Validate input
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return response.status(400).json({
+        message: "Please provide an array of questions",
+      });
+    }
+
+    // Check for existing questions
+    const existingQuestions = await Promise.all(
+      questions.map(async (q) => {
+        return await questionsModel.findQuestionByTextAndSection(
+          q.question,
+          q.section_id,
+          q.course_id
+        );
+      })
+    );
+
+    const duplicates = existingQuestions.filter((q) => q);
+    if (duplicates.length > 0) {
+      return response.status(409).json({
+        message: "Some questions already exist",
+        duplicates,
+      });
+    }
+
+    // Perform bulk insert
+    const insertedQuestions = await questionsModel.bulkInsertQuestions(
+      questions
+    );
+
+    response.status(201).json({
+      message: `${questions.length} questions inserted successfully`,
+      insertedCount: insertedQuestions.affectedRows,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: "Error while bulk inserting questions",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getSections,
   getCourses,
@@ -379,4 +426,5 @@ module.exports = {
   // getUsers,
   getUserAttemptsWithAnswers,
   updateUser,
+  bulkInsertQuestions,
 };

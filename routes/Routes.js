@@ -165,5 +165,10 @@ router.get("/sendOTP", emailController.sendOTP);
 router.get("/validateOTP", emailController.validateOTP);
 router.put("/forgotPassword", emailController.forgotPassword);
 router.put("/updateUser", verifyToken, questionsController.updateUser);
+router.post(
+  "/bulkInsertQuestions",
+  verifyToken,
+  questionsController.bulkInsertQuestions
+);
 
 module.exports = router;

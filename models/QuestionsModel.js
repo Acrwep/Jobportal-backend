@@ -501,5 +501,58 @@ const QuestionsModel = {
       throw new Error("Error while updating user: " + error.message);
     }
   },
+
+  bulkInsertQuestions: async (questions) => {
+    try {
+      const query = `
+      INSERT INTO questions 
+        (question, correct_answer, section_id, course_id, option_a, option_b, option_c, option_d) 
+      VALUES ?
+    `;
+
+      // Prepare values array for bulk insert
+      const values = questions.map((q) => [
+        q.question,
+        q.correct_answer,
+        q.section_id,
+        q.course_id,
+        q.option_a,
+        q.option_b,
+        q.option_c,
+        q.option_d,
+      ]);
+
+      const [result] = await pool.query(query, [values]);
+      return result;
+    } catch (error) {
+      throw new Error("Bulk insert failed: " + error.message);
+    }
+  },
+
+  findExistingQuestions: async (questions) => {
+    try {
+      // Extract all question texts for checking
+      const questionTexts = questions.map((q) => q.question);
+      const sectionId = questions[0].section_id; // Assuming same section for all
+      const courseId = questions[0].course_id; // Assuming same course for all
+
+      const query = `
+      SELECT question FROM questions 
+      WHERE question IN (?) 
+      AND section_id = ? 
+      AND course_id = ?
+    `;
+
+      const [existing] = await pool.query(query, [
+        questionTexts,
+        sectionId,
+        courseId,
+      ]);
+
+      return existing.map((q) => q.question); // Return array of existing question texts
+    } catch (error) {
+      throw new Error("Error checking existing questions: " + error.message);
+    }
+  },
 };
 module.exports = QuestionsModel;
