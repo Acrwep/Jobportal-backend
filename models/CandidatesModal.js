@@ -347,6 +347,10 @@ const candidatesModal = {
 
       const [result] = await pool.query(query, values);
 
+      const query1 = `SELECT a.id, IFNULL(ua.attempt_number, 0) AS attempt_number, COUNT(ua.question_id) AS total_questions, SUM(IFNULL(ua.mark, 0)) AS total_obtained_marks, ROUND((SUM(IFNULL(ua.mark, 0)) / COUNT(ua.question_id)) * 100, 2) AS attempt_percentage FROM candidates c INNER JOIN admin a ON c.email = a.email LEFT JOIN user_answers ua ON a.id = ua.user_id WHERE c.id = ? GROUP BY ua.attempt_number ORDER BY ua.attempt_number`;
+
+      const [attempt_result] = await pool.query(query1, [candidateId]);
+
       const formattedResult = result.map((candidate) => {
         return {
           ...candidate,
@@ -364,6 +368,7 @@ const candidatesModal = {
             ? JSON.parse(candidate.preferredJobLocations)
             : [],
           languages: candidate.languages ? JSON.parse(candidate.languages) : [],
+          attempt_result: attempt_result,
         };
       });
       return formattedResult;
