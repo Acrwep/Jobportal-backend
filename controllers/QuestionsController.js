@@ -366,7 +366,7 @@ const updateUser = async (request, response) => {
 };
 
 const bulkInsertQuestions = async (request, response) => {
-  const { questions } = request.body; // Expect array of question objects
+  const { questions } = request.body;
 
   try {
     // Validate input
@@ -376,22 +376,15 @@ const bulkInsertQuestions = async (request, response) => {
       });
     }
 
-    // Check for existing questions
-    const existingQuestions = await Promise.all(
-      questions.map(async (q) => {
-        return await questionsModel.findQuestionByTextAndSection(
-          q.question,
-          q.section_id,
-          q.course_id
-        );
-      })
+    // Check for existing questions (single query for all questions)
+    const existingQuestions = await questionsModel.findExistingQuestions(
+      questions
     );
 
-    const duplicates = existingQuestions.filter((q) => q);
-    if (duplicates.length > 0) {
+    if (existingQuestions.length > 0) {
       return response.status(409).json({
         message: "Some questions already exist",
-        duplicates,
+        duplicates: existingQuestions,
       });
     }
 

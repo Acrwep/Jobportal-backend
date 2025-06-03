@@ -511,7 +511,6 @@ const QuestionsModel = {
       VALUES ?
     `;
 
-      // Prepare values array for bulk insert
       const values = questions.map((q) => [
         q.question,
         q.correct_answer,
@@ -532,25 +531,33 @@ const QuestionsModel = {
 
   findExistingQuestions: async (questions) => {
     try {
-      // Extract all question texts for checking
       const questionTexts = questions.map((q) => q.question);
-      const sectionId = questions[0].section_id; // Assuming same section for all
-      const courseId = questions[0].course_id; // Assuming same course for all
+      const sectionId = questions[0].section_id;
+      const courseId = questions[0].course_id;
 
+      // Use JOIN with VALUES to check all questions in one query
       const query = `
-      SELECT question FROM questions 
-      WHERE question IN (?) 
-      AND section_id = ? 
-      AND course_id = ?
+      SELECT q.question 
+      FROM questions q
+      JOIN (
+        SELECT ? AS question_text
+        ${Array(questionTexts.length - 1)
+          .fill()
+          .map(() => "UNION ALL SELECT ?")
+          .join(" ")}
+      ) AS input_questions ON q.question = input_questions.question_text
+      WHERE q.section_id = ? 
+      AND q.course_id = ?
+      AND q.is_active = 1
     `;
 
       const [existing] = await pool.query(query, [
-        questionTexts,
+        ...questionTexts,
         sectionId,
         courseId,
       ]);
 
-      return existing.map((q) => q.question); // Return array of existing question texts
+      return existing.map((q) => q.question);
     } catch (error) {
       throw new Error("Error checking existing questions: " + error.message);
     }
