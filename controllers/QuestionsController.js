@@ -201,7 +201,7 @@ const deleteQuestion = async (request, response) => {
 
     const affectedRows = await questionsModel.deleteQuestion(id);
     return affectedRows > 0
-      ? response.status(201).send({ message: "Question has been deleted" })
+      ? response.status(200).send({ message: "Question has been deleted" })
       : response.status(409).send({ message: "No records deleted" });
   } catch (error) {
     response.status(500).send({
