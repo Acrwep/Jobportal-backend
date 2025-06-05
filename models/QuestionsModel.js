@@ -266,7 +266,7 @@ const QuestionsModel = {
     }
   },
 
-  insertUserAnswer: async (user_id, course_id, answers) => {
+  insertUserAnswer: async (user_id, course_id, answers, assesmentLink) => {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -286,7 +286,6 @@ const QuestionsModel = {
       const answerValues = [];
       let totalMarks = 0;
       let percentage = 0;
-      console.log("Answers", answers);
 
       for (const answer of answers) {
         const { question_id, selected_option } = answer;
@@ -323,6 +322,12 @@ const QuestionsModel = {
         );
       }
 
+      //Update test completed log in table
+      const [updateLog] = await pool.query(
+        `UPDATE assessment_link_log SET is_completed = 1 WHERE test_link = ?`,
+        [assesmentLink]
+      );
+
       await connection.commit();
       connection.release();
 
@@ -337,6 +342,16 @@ const QuestionsModel = {
       await connection.rollback();
       connection.release();
       throw new Error("Error in insertUserAnswer:" + error.message);
+    }
+  },
+
+  checkTestCompleted: async (test_link) => {
+    try {
+      const query = `SELECT id FROM assessment_link_log WHERE test_link = ? AND is_completed = 1`;
+      const [result] = await pool.query(query, [test_link]);
+      return result.length > 0 ? true : false;
+    } catch (error) {
+      throw new Error("Error checking test log:" + error.message);
     }
   },
 

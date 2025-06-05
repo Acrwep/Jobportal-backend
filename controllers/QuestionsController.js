@@ -212,12 +212,13 @@ const deleteQuestion = async (request, response) => {
 };
 
 const insertUserAnswer = async (request, response) => {
-  const { course_id, user_id, answers } = request.body;
+  const { course_id, user_id, answers, assesmentLink } = request.body;
   try {
     const result = await questionsModel.insertUserAnswer(
       user_id,
       course_id,
-      answers
+      answers,
+      assesmentLink
     );
     return response
       .status(201)
@@ -225,6 +226,27 @@ const insertUserAnswer = async (request, response) => {
   } catch (error) {
     response.status(500).send({
       message: "Error while updating.",
+      details: error.message,
+    });
+  }
+};
+
+const checkTestCompleted = async (request, response) => {
+  const { test_link } = request.query;
+  try {
+    const result = await questionsModel.checkTestCompleted(test_link);
+    if (result) {
+      return response
+        .status(200)
+        .send({ message: "Test completed successfully.", data: true });
+    } else {
+      return response
+        .status(200)
+        .send({ message: "Test has not completed yet.", data: false });
+    }
+  } catch (error) {
+    response.status(500).send({
+      message: "Error checking test link.",
       details: error.message,
     });
   }
@@ -420,4 +442,5 @@ module.exports = {
   getUserAttemptsWithAnswers,
   updateUser,
   bulkInsertQuestions,
+  checkTestCompleted,
 };

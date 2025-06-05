@@ -71,6 +71,12 @@ router.post(
   verifyToken,
   questionsController.insertUserAnswer
 );
+
+router.get(
+  "/checkTestCompleted",
+  verifyToken,
+  questionsController.checkTestCompleted
+);
 router.get("/getRoles", questionsController.getRoles);
 router.post("/insertAdmin", questionsController.insertAdmin);
 // router.get("/getUsers", verifyToken, questionsController.getUsers);
