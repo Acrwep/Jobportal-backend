@@ -109,7 +109,7 @@ async function sendTestLinks(users) {
 
     await Promise.all(mailPromises);
   } catch (error) {
-    throw new Error("Error while sending test links:" + error.message);
+    throw new Error(error.message);
   }
 }
 
@@ -119,7 +119,7 @@ const readTestLink = async (id) => {
     const [result] = await pool.query(query, [id]);
     return result.affectedRows;
   } catch (error) {
-    throw new Error("Error while reading test links:" + error.message);
+    throw new Error(error.message);
   }
 };
 

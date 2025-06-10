@@ -176,5 +176,15 @@ router.post(
   verifyToken,
   questionsController.bulkInsertQuestions
 );
+router.post(
+  "/createQuestionType",
+  verifyToken,
+  questionsController.createQuestionType
+);
+router.get(
+  "/getQuestionTypes",
+  verifyToken,
+  questionsController.getQuestionTypes
+);
 
 module.exports = router;

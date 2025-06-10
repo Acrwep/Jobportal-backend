@@ -47,13 +47,15 @@ const insertQuestion = async (request, response) => {
     option_b,
     option_c,
     option_d,
+    question_type_id,
   } = request.body;
   try {
     // 1. First check if the question already exists
     const existingQuestion = await questionsModel.findQuestionByTextAndSection(
       question,
       section_id,
-      course_id
+      course_id,
+      question_type_id
     );
 
     // 2. If exists, return a 409 Conflict response
@@ -73,7 +75,8 @@ const insertQuestion = async (request, response) => {
       option_a,
       option_b,
       option_c,
-      option_d
+      option_d,
+      question_type_id
     );
     response.status(201).send({ message: "Question inserted successfully" });
   } catch (error) {
@@ -120,11 +123,12 @@ const insertQuestion = async (request, response) => {
 // };
 
 const getQuestions = async (request, response) => {
-  const { courses, section_id } = request.body;
+  const { courses, section_id, question_type_id } = request.body;
   try {
     const questionsWithOptions = await questionsModel.getQuestionsWithOptions(
       courses,
-      section_id
+      section_id,
+      question_type_id
     );
     response.status(200).send({
       message: "Questions with option fetched successfully",
@@ -149,6 +153,7 @@ const updateQuestion = async (request, response) => {
     correct_answer,
     section_id,
     course_id,
+    question_type_id,
   } = request.body;
   try {
     // 1. First check if the question already exists
@@ -172,7 +177,8 @@ const updateQuestion = async (request, response) => {
       option_d,
       correct_answer,
       section_id,
-      course_id
+      course_id,
+      question_type_id
     );
     return (await result).affectedRows > 0
       ? response.status(201).send({ message: "Question updated successfully" })
@@ -280,20 +286,10 @@ const insertAdmin = async (request, response) => {
     profile,
   } = request.body;
   // Validate required fields
-  if (!name || !email || !password || !role_id || !course_id || !experience) {
+  if (!name || !email || !password || !role_id || !course_id) {
     return response.status(400).json({
       message: "Missing required fields",
-      required: [
-        "name",
-        "email",
-        "password",
-        "role_id",
-        "course_id",
-        "location_id",
-        "course_join_date",
-        "experience",
-        "profile",
-      ],
+      required: ["name", "email", "password", "role_id", "course_id"],
     });
   }
   try {
@@ -427,6 +423,37 @@ const bulkInsertQuestions = async (request, response) => {
   }
 };
 
+const createQuestionType = async (request, response) => {
+  const { name } = request.body;
+  try {
+    const result = await questionsModel.createQuestionType(name);
+    response.status(201).json({
+      message: `Questions type inserted successfully`,
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: "Error creating question type.",
+      details: error.message,
+    });
+  }
+};
+
+const getQuestionTypes = async (request, response) => {
+  try {
+    const types = await questionsModel.getQuestionTypes();
+    response.status(200).json({
+      message: `Questions type fetched successfully`,
+      data: types,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: "Error fetching question type.",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getSections,
   getCourses,
@@ -443,4 +470,6 @@ module.exports = {
   updateUser,
   bulkInsertQuestions,
   checkTestCompleted,
+  createQuestionType,
+  getQuestionTypes,
 };

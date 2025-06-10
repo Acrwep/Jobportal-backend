@@ -40,10 +40,11 @@ const QuestionsModel = {
     option_a,
     option_b,
     option_c,
-    option_d
+    option_d,
+    question_type_id
   ) => {
     try {
-      const query = `INSERT INTO questions (question, correct_answer, section_id, course_id, option_a, option_b, option_c, option_d) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+      const query = `INSERT INTO questions (question, correct_answer, section_id, course_id, option_a, option_b, option_c, option_d, question_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       const [result] = await pool.execute(query, [
         question,
         correct_answer,
@@ -53,27 +54,35 @@ const QuestionsModel = {
         option_b,
         option_c,
         option_d,
+        question_type_id,
       ]);
       return result;
     } catch (error) {
-      throw new Error("Error while inserting question: " + error.message);
+      throw new Error(error.message);
     }
   },
 
   //Check question is already exists
-  findQuestionByTextAndSection: async (questionText, sectionId, courseId) => {
+  findQuestionByTextAndSection: async (
+    questionText,
+    sectionId,
+    courseId,
+    question_type_id
+  ) => {
     try {
       const query = `
                 SELECT * FROM questions 
                 WHERE question = ? 
                 AND section_id = ? 
                 AND course_id = ?
+                AND question_type_id = ?
                 AND is_active = 1
             `;
       const [result] = await pool.query(query, [
         questionText,
         sectionId,
         courseId,
+        question_type_id,
       ]);
       return result[0]; // Returns the first match (or undefined if none)
     } catch (error) {
@@ -154,6 +163,12 @@ const QuestionsModel = {
         values.push(section_id);
       }
 
+      // Handle optional question_type_id
+      if (question_type_id) {
+        conditions.push("q.question_type_id = ?");
+        values.push(question_type_id);
+      }
+
       let query = `
       SELECT 
         q.id AS question_id, 
@@ -193,7 +208,8 @@ const QuestionsModel = {
     option_d,
     correct_answer,
     section_id,
-    course_id
+    course_id,
+    question_type_id
   ) => {
     const conn = await pool.getConnection();
     try {
@@ -209,7 +225,8 @@ const QuestionsModel = {
                     option_c = ?, 
                     option_d = ?, 
                     section_id = ?, 
-                    course_id = ?
+                    course_id = ?,
+                    question_type_id = ?
                 WHERE id = ? AND is_active = 1`;
 
       const values = [
@@ -220,6 +237,7 @@ const QuestionsModel = {
         option_c,
         option_d,
         section_id,
+        question_type_id,
         course_id,
         id,
       ];
@@ -388,7 +406,7 @@ const QuestionsModel = {
       );
 
       if (emailCheck.length > 0) {
-        return `Email already exists`;
+        throw new Error(`Email already exists`);
       }
       const query = `INSERT INTO admin (name, email, password, experience, profile, role_id, course_id, location_id, course_join_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       const values = [
@@ -409,7 +427,7 @@ const QuestionsModel = {
     } catch (error) {
       await conn.rollback();
       conn.release();
-      throw new Error("Error while inserting: " + error.message);
+      throw new Error(error.message);
     }
   },
 
@@ -575,6 +593,34 @@ const QuestionsModel = {
       return existing.map((q) => q.question);
     } catch (error) {
       throw new Error("Error checking existing questions: " + error.message);
+    }
+  },
+
+  createQuestionType: async (name) => {
+    try {
+      const [isNameExists] = await pool.query(
+        `SELECT * FROM question_type WHERE name = ? AND is_active = 1`,
+        [name]
+      );
+      if (isNameExists.length > 0) {
+        throw new Error("Name already exists.");
+      }
+      const query = `INSERT INTO question_type (name) VALUES (?)`;
+      const [result] = await pool.query(query, [name]);
+      return result.affectedRows;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  getQuestionTypes: async () => {
+    try {
+      const [types] = await pool.query(
+        `SELECT id, name FROM question_type WHERE is_active = 1 ORDER BY id`
+      );
+      return types;
+    } catch (error) {
+      throw new Error(error.message);
     }
   },
 };
