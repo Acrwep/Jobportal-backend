@@ -444,6 +444,8 @@ const QuestionsModel = {
       );
 
       // 2. Loop through attempts to get answers and calculate stats
+      const result = [];
+
       for (const attempt of attempts) {
         const [answers] = await pool.query(
           `SELECT
@@ -470,19 +472,21 @@ const QuestionsModel = {
           [user_id, attempt.attempt_number]
         );
 
-        const totalQuestions = answers.length;
-        const correctAnswers = answers.filter((a) => a.mark === 1).length;
-        const percentage =
-          totalQuestions > 0
-            ? Math.round((correctAnswers / totalQuestions) * 100)
-            : 0;
+        // Skip empty attempts
+        if (answers.length === 0) continue;
 
-        // Get question type from first answer (assuming all answers in attempt have same type)
-        const firstAnswer = answers[0] || {};
+        // Group answers by question type
+        const answersByType = {};
+        answers.forEach((answer) => {
+          const typeKey = answer.question_type_id;
+          if (!answersByType[typeKey]) {
+            answersByType[typeKey] = {
+              question_type_id: answer.question_type_id,
+              question_type: answer.question_type,
+              answers: [],
+            };
+          }
 
-        // Transform answers to include options array
-        const transformedAnswers = answers.map((answer) => {
-          // Create options array in the desired format
           const options = [];
           if (answer.option_a)
             options.push({ name: "option_a", value: answer.option_a });
@@ -493,7 +497,7 @@ const QuestionsModel = {
           if (answer.option_d)
             options.push({ name: "option_d", value: answer.option_d });
 
-          return {
+          answersByType[typeKey].answers.push({
             question_id: answer.question_id,
             question: answer.question,
             selected_option: answer.selected_option,
@@ -501,20 +505,37 @@ const QuestionsModel = {
             mark: answer.mark,
             section_id: answer.section_id,
             options: options,
-          };
+          });
         });
 
-        attempt.total_questions = totalQuestions;
-        attempt.correct_answers = correctAnswers;
-        attempt.percentage = percentage;
-        attempt.question_type_id = firstAnswer.question_type_id;
-        attempt.question_type = firstAnswer.question_type;
-        attempt.answers = transformedAnswers;
+        // Create attempt entries for each question type
+        Object.values(answersByType).forEach((typeGroup) => {
+          const totalQuestions = typeGroup.answers.length;
+          const correctAnswers = typeGroup.answers.filter(
+            (a) => a.mark === 1
+          ).length;
+          const percentage =
+            totalQuestions > 0
+              ? Math.round((correctAnswers / totalQuestions) * 100)
+              : 0;
+
+          result.push({
+            attempt_number: attempt.attempt_number,
+            attempt_date: attempt.attempt_date,
+            total_questions: totalQuestions,
+            correct_answers: correctAnswers,
+            percentage: percentage,
+            grade: getGrade(percentage),
+            question_type_id: typeGroup.question_type_id,
+            question_type: typeGroup.question_type,
+            answers: typeGroup.answers,
+          });
+        });
       }
 
-      return attempts;
+      return result;
     } catch (error) {
-      throw new Error("Error getting candidate questions: " + error.message);
+      throw new Error(error.message);
     }
   },
 
@@ -634,4 +655,36 @@ const QuestionsModel = {
     }
   },
 };
+
+function getGrade(percentage) {
+  // Ensure the percentage is within valid range (0-100)
+  percentage = Math.max(0, Math.min(100, percentage));
+
+  // Determine the grade using switch case
+  let grade;
+  switch (true) {
+    case percentage >= 91 && percentage <= 100:
+      grade = "Excellent";
+      break;
+    case percentage >= 81 && percentage <= 90:
+      grade = "Very good";
+      break;
+    case percentage >= 61 && percentage <= 80:
+      grade = "Good";
+      break;
+    case percentage >= 41 && percentage <= 60:
+      grade = "Above Average";
+      break;
+    case percentage >= 35 && percentage <= 40:
+      grade = "Average";
+      break;
+    case percentage >= 0 && percentage <= 34:
+      grade = "Fail";
+      break;
+    default:
+      grade = "Invalid";
+  }
+
+  return grade;
+}
 module.exports = QuestionsModel;
