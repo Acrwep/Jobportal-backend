@@ -456,11 +456,15 @@ const QuestionsModel = {
               q.option_a,
               q.option_b,
               q.option_c,
-              q.option_d
+              q.option_d,
+              qt.id AS question_type_id,
+              qt.name AS question_type
           FROM
               user_answers ua
           INNER JOIN questions q ON
             q.id = ua.question_id
+          LEFT JOIN question_type qt ON
+            q.question_type_id = qt.id
           WHERE
               ua.user_id = ? AND ua.attempt_number = ?`,
           [user_id, attempt.attempt_number]
@@ -472,6 +476,9 @@ const QuestionsModel = {
           totalQuestions > 0
             ? Math.round((correctAnswers / totalQuestions) * 100)
             : 0;
+
+        // Get question type from first answer (assuming all answers in attempt have same type)
+        const firstAnswer = answers[0] || {};
 
         // Transform answers to include options array
         const transformedAnswers = answers.map((answer) => {
@@ -500,6 +507,8 @@ const QuestionsModel = {
         attempt.total_questions = totalQuestions;
         attempt.correct_answers = correctAnswers;
         attempt.percentage = percentage;
+        attempt.question_type_id = firstAnswer.question_type_id;
+        attempt.question_type = firstAnswer.question_type;
         attempt.answers = transformedAnswers;
       }
 
