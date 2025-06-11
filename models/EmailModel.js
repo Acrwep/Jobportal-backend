@@ -130,6 +130,7 @@ const getTestLinkByUser = async (user_id) => {
                     user_id,
                     test_link,
                     status,
+                    CASE WHEN is_completed = 1 THEN 1 ELSE 0 END AS is_completed,
                     created_date
                   FROM
                     assessment_link_log
@@ -154,6 +155,7 @@ const getTestLinkByUser = async (user_id) => {
         user_id: link.user_id,
         test_link: link.test_link,
         status: link.status,
+        is_completed: link.is_completed,
         created_date: link.created_date,
       })),
     };
