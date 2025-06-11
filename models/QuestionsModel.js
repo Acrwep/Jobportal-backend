@@ -569,35 +569,31 @@ const QuestionsModel = {
 
   findExistingQuestions: async (questions) => {
     try {
-      const questionTexts = questions.map((q) => q.question);
-      const sectionId = questions[0].section_id;
-      const courseId = questions[0].course_id;
+      const existingQuestions = [];
 
-      // Use JOIN with VALUES to check all questions in one query
-      const query = `
-      SELECT q.question 
-      FROM questions q
-      JOIN (
-        SELECT ? AS question_text
-        ${Array(questionTexts.length - 1)
-          .fill()
-          .map(() => "UNION ALL SELECT ?")
-          .join(" ")}
-      ) AS input_questions ON q.question = input_questions.question_text
-      WHERE q.section_id = ? 
-      AND q.course_id = ?
-      AND q.is_active = 1
-    `;
+      for (const question of questions) {
+        const [results] = await pool.query(
+          `SELECT id FROM questions 
+         WHERE question = ? 
+         AND section_id = ? 
+         AND course_id = ? 
+         AND question_type_id = ?
+         AND is_active = 1`,
+          [
+            question.question,
+            question.section_id,
+            question.course_id,
+            question.question_type_id,
+          ]
+        );
 
-      const [existing] = await pool.query(query, [
-        ...questionTexts,
-        sectionId,
-        courseId,
-      ]);
-
-      return existing.map((q) => q.question);
+        if (results.length > 0) {
+          existingQuestions.push(question.question);
+        }
+      }
+      return existingQuestions;
     } catch (error) {
-      throw new Error("Error checking existing questions: " + error.message);
+      throw new Error(error.message);
     }
   },
 

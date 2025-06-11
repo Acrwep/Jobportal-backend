@@ -27,7 +27,7 @@ async function sendTestLinks(users) {
       const candidateName = result[0].name;
       // 1. Generate time-sensitive token
       const token = generateToken(recipientEmail);
-      const testLink = `${process.env.LINK_URL}/test-invite/${token}`;
+      const testLink = `${process.env.LINK_URL}/test-invite/${user.question_type_id}/${token}`;
       const today = new Date();
 
       const expiryDateFormatted = moment(today)
