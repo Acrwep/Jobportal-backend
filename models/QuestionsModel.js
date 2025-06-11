@@ -145,7 +145,7 @@ const QuestionsModel = {
   //     }
   // },
 
-  getQuestionsWithOptions: async (courses, section_id) => {
+  getQuestionsWithOptions: async (courses, section_id, question_type_id) => {
     try {
       let conditions = ["q.is_active = 1"];
       let values = [];
@@ -181,13 +181,17 @@ const QuestionsModel = {
         q.option_a, 
         q.option_b, 
         q.option_c, 
-        q.option_d
+        q.option_d,
+        qt.id AS question_type_id,
+        qt.name AS question_type
       FROM 
         questions q
       LEFT JOIN 
         section s ON q.section_id = s.id
       LEFT JOIN 
         course c ON c.id = q.course_id
+      LEFT JOIN
+        question_type qt ON qt.id = q.question_type_id
       WHERE 
         ${conditions.join(" AND ")}
     `;
@@ -195,7 +199,7 @@ const QuestionsModel = {
       const [questions] = await pool.query(query, values);
       return questions;
     } catch (error) {
-      throw new Error(`Failed to get questions with options: ${error.message}`);
+      throw new Error(error.message);
     }
   },
 
@@ -540,7 +544,7 @@ const QuestionsModel = {
     try {
       const query = `
       INSERT INTO questions 
-        (question, correct_answer, section_id, course_id, option_a, option_b, option_c, option_d) 
+        (question, correct_answer, section_id, course_id, option_a, option_b, option_c, option_d, question_type_id) 
       VALUES ?
     `;
 
@@ -553,6 +557,7 @@ const QuestionsModel = {
         q.option_b,
         q.option_c,
         q.option_d,
+        q.question_type_id,
       ]);
 
       const [result] = await pool.query(query, [values]);
