@@ -360,6 +360,7 @@ const QuestionsModel = {
         total_questions: answers.length,
         total_marks_obtained: totalMarks,
         percentage: percentage.toFixed(2),
+        grade: getGrade(percentage),
       };
     } catch (error) {
       await connection.rollback();
