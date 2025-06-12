@@ -444,8 +444,6 @@ const QuestionsModel = {
       );
 
       // 2. Loop through attempts to get answers and calculate stats
-      const result = [];
-
       for (const attempt of attempts) {
         const [answers] = await pool.query(
           `SELECT
@@ -472,21 +470,16 @@ const QuestionsModel = {
           [user_id, attempt.attempt_number]
         );
 
-        // Skip empty attempts
-        if (answers.length === 0) continue;
+        const totalQuestions = answers.length;
+        const correctAnswers = answers.filter((a) => a.mark === 1).length;
+        const percentage =
+          totalQuestions > 0
+            ? Math.round((correctAnswers / totalQuestions) * 100)
+            : 0;
 
-        // Group answers by question type
-        const answersByType = {};
-        answers.forEach((answer) => {
-          const typeKey = answer.question_type_id;
-          if (!answersByType[typeKey]) {
-            answersByType[typeKey] = {
-              question_type_id: answer.question_type_id,
-              question_type: answer.question_type,
-              answers: [],
-            };
-          }
-
+        // Transform answers to include options array
+        const transformedAnswers = answers.map((answer) => {
+          // Create options array in the desired format
           const options = [];
           if (answer.option_a)
             options.push({ name: "option_a", value: answer.option_a });
@@ -497,45 +490,28 @@ const QuestionsModel = {
           if (answer.option_d)
             options.push({ name: "option_d", value: answer.option_d });
 
-          answersByType[typeKey].answers.push({
+          return {
             question_id: answer.question_id,
             question: answer.question,
             selected_option: answer.selected_option,
             correct_answer: answer.correct_answer,
+            question_type_id: answer.question_type_id,
+            question_type: answer.question_type,
             mark: answer.mark,
             section_id: answer.section_id,
             options: options,
-          });
+          };
         });
 
-        // Create attempt entries for each question type
-        Object.values(answersByType).forEach((typeGroup) => {
-          const totalQuestions = typeGroup.answers.length;
-          const correctAnswers = typeGroup.answers.filter(
-            (a) => a.mark === 1
-          ).length;
-          const percentage =
-            totalQuestions > 0
-              ? Math.round((correctAnswers / totalQuestions) * 100)
-              : 0;
-
-          result.push({
-            attempt_number: attempt.attempt_number,
-            attempt_date: attempt.attempt_date,
-            total_questions: totalQuestions,
-            correct_answers: correctAnswers,
-            percentage: percentage,
-            grade: getGrade(percentage),
-            question_type_id: typeGroup.question_type_id,
-            question_type: typeGroup.question_type,
-            answers: typeGroup.answers,
-          });
-        });
+        attempt.total_questions = totalQuestions;
+        attempt.correct_answers = correctAnswers;
+        attempt.percentage = percentage;
+        attempt.answers = transformedAnswers;
       }
 
-      return result;
+      return attempts;
     } catch (error) {
-      throw new Error(error.message);
+      throw new Error("Error getting candidate questions: " + error.message);
     }
   },
 
