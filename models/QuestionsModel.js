@@ -280,7 +280,8 @@ const QuestionsModel = {
 
   deleteQuestion: async (id) => {
     try {
-      const query = `DELETE FROM questions WHERE id = ?`;
+      // const query = `DELETE FROM questions WHERE id = ?`;
+      const query = `UPDATE questions SET is_active = 0 WHERE id = ?`;
       const [result] = await pool.query(query, [id]);
       return result.affectedRows;
     } catch (error) {
