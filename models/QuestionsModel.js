@@ -507,6 +507,7 @@ const QuestionsModel = {
         attempt.total_questions = totalQuestions;
         attempt.correct_answers = correctAnswers;
         attempt.percentage = percentage;
+        attempt.grade = getGrade(percentage);
         attempt.answers = transformedAnswers;
       }
 
