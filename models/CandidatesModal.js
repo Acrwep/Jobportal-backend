@@ -644,11 +644,13 @@ const candidatesModal = {
                     cr.id AS course_id,
                     IFNULL(latest_email.sent_at, '') AS last_email_sent_date,
                     IFNULL(t.attempt_count, 0) AS attempt_number,
-                    r.name AS role
+                    r.name AS role,
+                    CASE WHEN c.email IS NOT NULL THEN 1 ELSE 0 END AS is_placement_registered
                   FROM admin a
                   LEFT JOIN course cr ON a.course_id = cr.id
                   LEFT JOIN location l ON a.location_id = l.id
                   LEFT JOIN role r ON r.id = a.role_id
+                  LEFT JOIN candidates c ON a.email = c.email
                   LEFT JOIN (
                     SELECT user_id, MAX(sent_at) AS sent_at
                     FROM email_logs
