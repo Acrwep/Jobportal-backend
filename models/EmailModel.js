@@ -88,8 +88,13 @@ async function sendTestLinks(users) {
           [recipientEmail, "Your Test Invitation", user.id, user.course_id]
         );
 
-        const query = `INSERT INTO assessment_link_log(user_id, test_link, status) VALUES (?, ?, ?)`;
-        const [result] = await pool.query(query, [user.id, testLink, "New"]);
+        const query = `INSERT INTO assessment_link_log(user_id, test_link, status, created_date) VALUES (?, ?, ?, ?)`;
+        const [result] = await pool.query(query, [
+          user.id,
+          testLink,
+          "New",
+          user.created_date,
+        ]);
         return result;
       } catch (error) {
         // Log failed email to database
