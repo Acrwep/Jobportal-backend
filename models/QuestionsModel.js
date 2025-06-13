@@ -241,8 +241,8 @@ const QuestionsModel = {
         option_c,
         option_d,
         section_id,
-        question_type_id,
         course_id,
+        question_type_id,
         id,
       ];
 
