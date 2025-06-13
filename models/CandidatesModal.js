@@ -712,10 +712,10 @@ const candidatesModal = {
 
   checkCandidate: async (email) => {
     try {
-      const query = `SELECT email FROM candidates WHERE email = ?`;
+      const query = `SELECT id FROM candidates WHERE email = ?`;
       const [result] = await pool.query(query, [email]);
-      if (result.length > 0) return true;
-      else return false;
+      if (result.length > 0) return result[0].id;
+      else return 0;
     } catch (error) {
       throw new Error("Error while checking candidate: " + error.message);
     }
