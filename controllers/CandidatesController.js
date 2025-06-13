@@ -340,6 +340,123 @@ const checkCandidate = async (request, response) => {
   }
 };
 
+const updateCandidate = async (request, response) => {
+  const {
+    firstName,
+    lastName,
+    mobile,
+    email,
+    country,
+    city,
+    state,
+    pincode,
+    yearsOfExperience,
+    monthOfExperience,
+    skills,
+    qualification,
+    university,
+    graduateYear,
+    typeOfEducation,
+    certifications,
+    gender,
+    preferredJobTitles,
+    noticePeriod,
+    currentCTC,
+    expectedCTC,
+    linkedinURL,
+    updatedAt,
+    resume,
+    companyName,
+    designation,
+    companyStartdate,
+    companyEnddate,
+    workingStatus,
+    preferredJobLocations,
+    profileSummary,
+    profileImage,
+    favorites,
+    languages,
+    courseLocation,
+    courseStatus,
+    mockupPercentage,
+    courseJoiningDate,
+    eligibleCandidates,
+    password,
+    course_id,
+    id,
+  } = request.body;
+
+  const formattedSkills = Array.isArray(skills) ? skills : [skills];
+  const formattedCertificateDetails = Array.isArray(certifications)
+    ? certifications
+    : [certifications];
+  const formattedLanguages = Array.isArray(languages) ? languages : [languages];
+  const formattedJobtitles = Array.isArray(preferredJobTitles)
+    ? preferredJobTitles
+    : [preferredJobTitles];
+
+  const formattedJoblocations = Array.isArray(preferredJobLocations)
+    ? preferredJobLocations
+    : [preferredJobLocations];
+
+  try {
+    const result = await candidatesModal.updateCandidate(
+      firstName,
+      lastName,
+      mobile,
+      email,
+      country,
+      city,
+      state,
+      pincode,
+      yearsOfExperience,
+      monthOfExperience,
+      formattedSkills,
+      qualification,
+      university,
+      graduateYear,
+      typeOfEducation,
+      formattedCertificateDetails,
+      gender,
+      formattedJobtitles,
+      noticePeriod,
+      currentCTC,
+      expectedCTC,
+      linkedinURL,
+      updatedAt,
+      resume,
+      companyName,
+      designation,
+      companyStartdate,
+      companyEnddate,
+      workingStatus,
+      formattedJoblocations,
+      profileSummary,
+      profileImage,
+      favorites,
+      formattedLanguages,
+      courseLocation,
+      courseStatus,
+      mockupPercentage,
+      courseJoiningDate,
+      eligibleCandidates,
+      password,
+      course_id,
+      id
+    );
+
+    return response.status(200).send({
+      message: "Candidate updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while updating candidate",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerCandidate,
   getCandidates,
@@ -350,4 +467,5 @@ module.exports = {
   getLocations,
   getUsers,
   checkCandidate,
+  updateCandidate,
 };

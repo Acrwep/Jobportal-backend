@@ -187,4 +187,10 @@ router.get(
   questionsController.getQuestionTypes
 );
 
+router.put(
+  "/updateCandidate",
+  verifyToken,
+  candidateController.updateCandidate
+);
+
 module.exports = router;
