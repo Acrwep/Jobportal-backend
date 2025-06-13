@@ -347,7 +347,34 @@ const candidatesModal = {
 
       const [result] = await pool.query(query, values);
 
-      const query1 = `SELECT a.id, IFNULL(ua.attempt_number, 0) AS attempt_number, COUNT(ua.question_id) AS total_questions, SUM(IFNULL(ua.mark, 0)) AS total_obtained_marks, ROUND((SUM(IFNULL(ua.mark, 0)) / COUNT(ua.question_id)) * 100, 2) AS attempt_percentage FROM candidates c INNER JOIN admin a ON c.email = a.email LEFT JOIN user_answers ua ON a.id = ua.user_id WHERE c.id = ? GROUP BY ua.attempt_number ORDER BY ua.attempt_number`;
+      const query1 = `SELECT
+                          a.id,
+                          IFNULL(ua.attempt_number, 0) AS attempt_number,
+                          COUNT(ua.question_id) AS total_questions,
+                          SUM(IFNULL(ua.mark, 0)) AS total_obtained_marks,
+                          ROUND(
+                              (
+                                  SUM(IFNULL(ua.mark, 0)) / COUNT(ua.question_id)
+                              ) * 100,
+                              2
+                          ) AS attempt_percentage,
+                          qt.name AS question_type
+                      FROM
+                          candidates c
+                      INNER JOIN admin a ON
+                          c.email = a.email
+                      LEFT JOIN user_answers ua ON
+                          c.id = ua.user_id
+                      LEFT JOIN questions q ON
+                          ua.question_id = q.id
+                      LEFT JOIN question_type qt ON
+                          q.question_type_id = qt.id
+                      WHERE
+                          c.id = ?
+                      GROUP BY
+                          ua.attempt_number
+                      ORDER BY
+                          ua.attempt_number`;
 
       const [attempt_result] = await pool.query(query1, [candidateId]);
 
