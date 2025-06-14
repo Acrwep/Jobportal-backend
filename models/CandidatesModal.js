@@ -358,13 +358,16 @@ const candidatesModal = {
                               ) * 100,
                               2
                           ) AS attempt_percentage,
-                          qt.name AS question_type
+                          qt.name AS question_type,
+                          ta.attempt_date
                       FROM
                           candidates c
                       INNER JOIN admin a ON
                           c.email = a.email
                       LEFT JOIN user_answers ua ON
                           a.id = ua.user_id
+                      LEFT JOIN test_attempts ta ON
+                          ua.attempt_number = ta.attempt_number
                       LEFT JOIN questions q ON
                           ua.question_id = q.id
                       LEFT JOIN question_type qt ON
@@ -377,6 +380,12 @@ const candidatesModal = {
                           ua.attempt_number`;
 
       const [attempt_result] = await pool.query(query1, [candidateId]);
+
+      // Add grade to each attempt result
+      const attemptResultsWithGrade = attempt_result.map((attempt) => ({
+        ...attempt,
+        grade: getGrade(attempt.attempt_percentage || 0),
+      }));
 
       const formattedResult = result.map((candidate) => {
         return {
@@ -395,7 +404,7 @@ const candidatesModal = {
             ? JSON.parse(candidate.preferredJobLocations)
             : [],
           languages: candidate.languages ? JSON.parse(candidate.languages) : [],
-          attempt_result: attempt_result,
+          attempt_result: attemptResultsWithGrade,
         };
       });
       return formattedResult;
@@ -871,4 +880,36 @@ const candidatesModal = {
     }
   },
 };
+
+function getGrade(percentage) {
+  // Ensure the percentage is within valid range (0-100)
+  percentage = Math.max(0, Math.min(100, percentage));
+
+  // Determine the grade using switch case
+  let grade;
+  switch (true) {
+    case percentage >= 91 && percentage <= 100:
+      grade = "Excellent";
+      break;
+    case percentage >= 81 && percentage <= 90:
+      grade = "Very good";
+      break;
+    case percentage >= 61 && percentage <= 80:
+      grade = "Good";
+      break;
+    case percentage >= 41 && percentage <= 60:
+      grade = "Above Average";
+      break;
+    case percentage >= 35 && percentage <= 40:
+      grade = "Average";
+      break;
+    case percentage >= 0 && percentage <= 34:
+      grade = "Fail";
+      break;
+    default:
+      grade = "Invalid";
+  }
+
+  return grade;
+}
 module.exports = candidatesModal;
