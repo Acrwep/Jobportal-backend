@@ -364,7 +364,7 @@ const candidatesModal = {
                       INNER JOIN admin a ON
                           c.email = a.email
                       LEFT JOIN user_answers ua ON
-                          c.id = ua.user_id
+                          a.id = ua.user_id
                       LEFT JOIN questions q ON
                           ua.question_id = q.id
                       LEFT JOIN question_type qt ON
