@@ -356,7 +356,7 @@ const candidatesModal = {
                               (
                                   SUM(IFNULL(ua.mark, 0)) / COUNT(ua.question_id)
                               ) * 100,
-                              2
+                              0
                           ) AS attempt_percentage,
                           qt.name AS question_type,
                           ta.attempt_date
