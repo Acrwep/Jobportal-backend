@@ -714,8 +714,16 @@ const candidatesModal = {
     try {
       const query = `SELECT id FROM candidates WHERE email = ?`;
       const [result] = await pool.query(query, [email]);
-      if (result.length > 0) return result[0].id;
-      else return 0;
+      if (result.length > 0) {
+        return {
+          id: result[0].id,
+          is_exists: true,
+        };
+      } else
+        return {
+          id: 0,
+          is_exists: false,
+        };
     } catch (error) {
       throw new Error("Error while checking candidate: " + error.message);
     }
