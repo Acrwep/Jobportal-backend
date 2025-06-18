@@ -8,9 +8,9 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectTimeout: 60000, // Increase timeout to 60 seconds
-  acquireTimeout: 60000, // Increase acquire timeout
-  queueLimit: 0,
-  timezone: "Asia/Kolkata",
+  // acquireTimeout: 60000,
+  // queueLimit: 0,
+  // timezone: "Asia/Kolkata",
   dateStrings: true, // prevents JS from converting DATETIME to UTC
 });
 
