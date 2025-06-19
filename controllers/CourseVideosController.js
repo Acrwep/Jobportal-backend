@@ -1,7 +1,9 @@
 const { request } = require("http");
 const CourseVideoModel = require("../models/CourseVideosModel");
 const upload = require("../Validation/UploadMiddleware");
-const fs = require("fs").promises;
+const compressVideo = require("../Validation/CompressVideo");
+const fssync = require("fs");
+const fs = require("fs/promises");
 const path = require("path");
 const { type } = require("os");
 
@@ -15,12 +17,12 @@ class CourseVideosController {
       content_url,
       title,
     } = request.body;
+
     try {
-      //Validate required fields
       if (!course_id || !topic_id || !trainer_id || !content_type) {
         return response.status(400).send({
           message:
-            "Missing required fields (coures_id, topic_id, trainer_id, content_type)",
+            "Missing required fields (course_id, topic_id, trainer_id, content_type)",
         });
       }
 
@@ -29,8 +31,25 @@ class CourseVideosController {
       switch (content_type) {
         case "video":
           if (!request.file) {
-            return response.status(400).send({
-              message: "No video file uploaded",
+            return response
+              .status(400)
+              .send({ message: "No video file uploaded" });
+          }
+
+          const originalPath = request.file.path;
+          const compressedPath = path.join(
+            path.dirname(originalPath),
+            "compressed-" + path.basename(originalPath)
+          );
+
+          try {
+            await compressVideo(originalPath, compressedPath);
+            await fs.unlink(originalPath); // delete original
+            await fs.rename(compressedPath, originalPath); // move compressed to original name
+          } catch (err) {
+            return response.status(500).send({
+              message: "Video compression failed",
+              error: err.message,
             });
           }
 
@@ -38,7 +57,7 @@ class CourseVideosController {
             type: "video",
             fileName: request.file.filename,
             originalname: request.file.originalname,
-            size: request.file.size,
+            size: fssync.statSync(originalPath).size,
             mimetype: request.file.mimetype,
             path: `/uploads/course-videos/${request.file.filename}`,
           };
@@ -46,9 +65,9 @@ class CourseVideosController {
 
         case "youtube":
           if (!content_url) {
-            return response.status(400).send({
-              message: "YouTube URL is required",
-            });
+            return response
+              .status(400)
+              .send({ message: "YouTube URL is required" });
           }
 
           contentDate = {
@@ -58,15 +77,14 @@ class CourseVideosController {
             size: null,
             mimetype: null,
             path: content_url,
-            content: null,
           };
           break;
 
         case "document":
           if (!request.file) {
-            return response.status(400).send({
-              message: "No document file uploaded",
-            });
+            return response
+              .status(400)
+              .send({ message: "No document file uploaded" });
           }
 
           contentDate = {
@@ -80,10 +98,7 @@ class CourseVideosController {
           break;
 
         default:
-          return response.status(400).send({
-            message:
-              "Invalid conetnt type (must be 'video', 'youtube', or 'document')",
-          });
+          return response.status(400).send({ message: "Invalid content type" });
       }
 
       const contentId = await CourseVideoModel.createContent(
@@ -103,7 +118,7 @@ class CourseVideosController {
         },
       });
     } catch (error) {
-      response.status(500).send({
+      return response.status(500).send({
         message: "Failed to upload content",
         details: error.message,
       });
@@ -322,7 +337,6 @@ class CourseVideosController {
       }
 
       let contentDate;
-
       switch (content_type) {
         case "video":
           if (!request.file) {
@@ -331,11 +345,28 @@ class CourseVideosController {
             });
           }
 
+          const originalPath = request.file.path;
+          const compressedPath = path.join(
+            path.dirname(originalPath),
+            "compressed-" + path.basename(originalPath)
+          );
+
+          try {
+            await compressVideo(originalPath, compressedPath);
+            await fs.unlink(originalPath); // delete original
+            await fs.rename(compressedPath, originalPath); // move compressed to original name
+          } catch (err) {
+            return response.status(500).send({
+              message: "Video compression failed",
+              error: err.message,
+            });
+          }
+
           contentDate = {
             type: "video",
             fileName: request.file.filename,
             originalname: request.file.originalname,
-            size: request.file.size,
+            size: fssync.statSync(originalPath).size,
             mimetype: request.file.mimetype,
             path: `/uploads/company-contents/${request.file.filename}`,
           };

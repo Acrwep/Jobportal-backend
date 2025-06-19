@@ -87,7 +87,7 @@ const uploadCourseVideo = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 1024 * 1024 * 500, // 500MB limit
+    fileSize: 10 * 1024 * 1024 * 1024, // 10gb limit
   },
 });
 
@@ -95,7 +95,7 @@ const uploadCompanyContent = multer({
   storage: companyStorage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 1024 * 1024 * 500, // 500MB limit
+    fileSize: 10 * 1024 * 1024 * 1024, // 10gb limit
   },
 });
 
