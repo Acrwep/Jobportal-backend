@@ -265,27 +265,34 @@ const QuestionsModel = {
     }
   },
 
-  findQuestionExists: async (id) => {
+  findQuestionsExist: async (ids) => {
     try {
+      // Create placeholders for the IN clause
+      const placeholders = ids.map(() => "?").join(",");
       const query = `
-                SELECT * FROM questions 
-                WHERE id = ?
-            `;
-      const [result] = await pool.query(query, [id]);
-      return result[0]; // Returns the first match (or undefined if none)
+      SELECT id FROM questions 
+      WHERE id IN (${placeholders}) AND is_active = 1
+    `;
+      const [result] = await pool.query(query, ids);
+      return result;
     } catch (error) {
-      throw new Error("Error checking question existence: " + error.message);
+      throw new Error("Error checking questions existence: " + error.message);
     }
   },
 
-  deleteQuestion: async (id) => {
+  deleteQuestions: async (ids) => {
     try {
-      // const query = `DELETE FROM questions WHERE id = ?`;
-      const query = `UPDATE questions SET is_active = 0 WHERE id = ?`;
-      const [result] = await pool.query(query, [id]);
+      // Create placeholders for the IN clause
+      const placeholders = ids.map(() => "?").join(",");
+      const query = `
+      UPDATE questions 
+      SET is_active = 0 
+      WHERE id IN (${placeholders}) AND is_active = 1
+    `;
+      const [result] = await pool.query(query, ids);
       return result.affectedRows;
     } catch (error) {
-      throw new Error("Error while deleting: " + error.message);
+      throw new Error("Error while deleting questions: " + error.message);
     }
   },
 
@@ -437,51 +444,162 @@ const QuestionsModel = {
     }
   },
 
-  getUserAttemptsWithAnswers: async (user_id) => {
+  // getUserAttemptsWithAnswers: async (user_id) => {
+  //   try {
+  //     // 1. Get all attempts for the user
+  //     const [attempts] = await pool.query(
+  //       "SELECT attempt_number, attempt_date FROM test_attempts WHERE user_id = ? ORDER BY attempt_number",
+  //       [user_id]
+  //     );
+
+  //     // 2. Loop through attempts to get answers and calculate stats
+  //     for (const attempt of attempts) {
+  //       const [answers] = await pool.query(
+  //         `SELECT
+  //             ua.question_id,
+  //             q.question,
+  //             ua.selected_option,
+  //             ua.mark,
+  //             q.section_id,
+  //             q.correct_answer,
+  //             q.option_a,
+  //             q.option_b,
+  //             q.option_c,
+  //             q.option_d,
+  //             qt.id AS question_type_id,
+  //             qt.name AS question_type
+  //         FROM
+  //             user_answers ua
+  //         INNER JOIN questions q ON
+  //           q.id = ua.question_id
+  //         LEFT JOIN question_type qt ON
+  //           q.question_type_id = qt.id
+  //         WHERE
+  //             ua.user_id = ? AND ua.attempt_number = ?`,
+  //         [user_id, attempt.attempt_number]
+  //       );
+
+  //       const totalQuestions = answers.length;
+  //       const correctAnswers = answers.filter((a) => a.mark === 1).length;
+  //       const percentage =
+  //         totalQuestions > 0
+  //           ? Math.round((correctAnswers / totalQuestions) * 100)
+  //           : 0;
+
+  //       // Transform answers to include options array
+  //       const transformedAnswers = answers.map((answer) => {
+  //         // Create options array in the desired format
+  //         const options = [];
+  //         if (answer.option_a)
+  //           options.push({ name: "option_a", value: answer.option_a });
+  //         if (answer.option_b)
+  //           options.push({ name: "option_b", value: answer.option_b });
+  //         if (answer.option_c)
+  //           options.push({ name: "option_c", value: answer.option_c });
+  //         if (answer.option_d)
+  //           options.push({ name: "option_d", value: answer.option_d });
+
+  //         return {
+  //           question_id: answer.question_id,
+  //           question: answer.question,
+  //           selected_option: answer.selected_option,
+  //           correct_answer: answer.correct_answer,
+  //           question_type_id: answer.question_type_id,
+  //           question_type: answer.question_type,
+  //           mark: answer.mark,
+  //           section_id: answer.section_id,
+  //           options: options,
+  //         };
+  //       });
+
+  //       attempt.total_questions = totalQuestions;
+  //       attempt.correct_answers = correctAnswers;
+  //       attempt.percentage = percentage;
+  //       attempt.grade = getGrade(percentage);
+  //       attempt.answers = transformedAnswers;
+  //     }
+
+  //     return attempts;
+  //   } catch (error) {
+  //     throw new Error("Error getting candidate questions: " + error.message);
+  //   }
+  // },
+
+  getUsersAttemptsWithAnswers: async (userIds) => {
     try {
-      // 1. Get all attempts for the user
-      const [attempts] = await pool.query(
-        "SELECT attempt_number, attempt_date FROM test_attempts WHERE user_id = ? ORDER BY attempt_number",
-        [user_id]
+      // Create placeholders for the IN clause
+      const placeholders = userIds.map(() => "?").join(",");
+
+      // 1. Get all attempts for all users
+      const [allAttempts] = await pool.query(
+        `SELECT 
+          user_id, 
+          attempt_number, 
+          attempt_date 
+        FROM test_attempts 
+        WHERE user_id IN (${placeholders}) 
+        ORDER BY user_id, attempt_number`,
+        userIds
       );
 
-      // 2. Loop through attempts to get answers and calculate stats
-      for (const attempt of attempts) {
-        const [answers] = await pool.query(
-          `SELECT
-              ua.question_id,
-              q.question,
-              ua.selected_option,
-              ua.mark,
-              q.section_id,
-              q.correct_answer,
-              q.option_a,
-              q.option_b,
-              q.option_c,
-              q.option_d,
-              qt.id AS question_type_id,
-              qt.name AS question_type
-          FROM
-              user_answers ua
-          INNER JOIN questions q ON
-            q.id = ua.question_id
-          LEFT JOIN question_type qt ON
-            q.question_type_id = qt.id
-          WHERE
-              ua.user_id = ? AND ua.attempt_number = ?`,
-          [user_id, attempt.attempt_number]
+      // 2. Get all answers for all users in one query
+      const [allAnswers] = await pool.query(
+        `SELECT
+            ua.user_id,
+            ua.attempt_number,
+            ua.question_id,
+            q.question,
+            ua.selected_option,
+            ua.mark,
+            q.section_id,
+            q.correct_answer,
+            q.option_a,
+            q.option_b,
+            q.option_c,
+            q.option_d,
+            qt.id AS question_type_id,
+            qt.name AS question_type
+        FROM
+            user_answers ua
+        INNER JOIN questions q ON
+          q.id = ua.question_id
+        LEFT JOIN question_type qt ON
+          q.question_type_id = qt.id
+        WHERE
+            ua.user_id IN (${placeholders})`,
+        [...userIds, ...userIds] // Duplicated for both queries
+      );
+
+      // 3. Organize data by user and attempt
+      const usersData = {};
+
+      // Initialize user structure
+      userIds.forEach((id) => {
+        usersData[id] = {
+          user_id: parseInt(id),
+          attempts: [],
+        };
+      });
+
+      // Process attempts
+      allAttempts.forEach((attempt) => {
+        if (!usersData[attempt.user_id]) return;
+
+        const userAnswers = allAnswers.filter(
+          (a) =>
+            a.user_id === attempt.user_id &&
+            a.attempt_number === attempt.attempt_number
         );
 
-        const totalQuestions = answers.length;
-        const correctAnswers = answers.filter((a) => a.mark === 1).length;
+        const totalQuestions = userAnswers.length;
+        const correctAnswers = userAnswers.filter((a) => a.mark === 1).length;
         const percentage =
           totalQuestions > 0
             ? Math.round((correctAnswers / totalQuestions) * 100)
             : 0;
 
-        // Transform answers to include options array
-        const transformedAnswers = answers.map((answer) => {
-          // Create options array in the desired format
+        // Transform answers
+        const transformedAnswers = userAnswers.map((answer) => {
           const options = [];
           if (answer.option_a)
             options.push({ name: "option_a", value: answer.option_a });
@@ -505,16 +623,23 @@ const QuestionsModel = {
           };
         });
 
-        attempt.total_questions = totalQuestions;
-        attempt.correct_answers = correctAnswers;
-        attempt.percentage = percentage;
-        attempt.grade = getGrade(percentage);
-        attempt.answers = transformedAnswers;
-      }
+        usersData[attempt.user_id].attempts.push({
+          attempt_number: attempt.attempt_number,
+          attempt_date: attempt.attempt_date,
+          total_questions: totalQuestions,
+          correct_answers: correctAnswers,
+          percentage: percentage,
+          grade: getGrade(percentage),
+          answers: transformedAnswers,
+        });
+      });
 
-      return attempts;
+      // Convert to array and filter out users with no attempts
+      return Object.values(usersData).filter(
+        (user) => user.attempts.length > 0
+      );
     } catch (error) {
-      throw new Error("Error getting candidate questions: " + error.message);
+      throw new Error("Error getting users' questions: " + error.message);
     }
   },
 

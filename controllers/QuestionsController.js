@@ -192,26 +192,40 @@ const updateQuestion = async (request, response) => {
 };
 
 const deleteQuestion = async (request, response) => {
-  const { id } = request.query;
+  const { ids } = request.body; // Expecting comma-separated IDs or array
   try {
-    // 1. First check if the question already exists
-    const existingQuestion = await questionsModel.findQuestionExists(id);
+    // Convert to array if it's a string
+    const questionIds = Array.isArray(ids) ? ids : ids.split(",");
 
-    // 2. If not exists, return a 409 Conflict response
-    if (!existingQuestion) {
+    // 1. First check if all questions exist
+    const existingQuestions = await questionsModel.findQuestionsExist(
+      questionIds
+    );
+
+    // 2. If not all exist, return a 404 response
+    if (existingQuestions.length !== questionIds.length) {
+      const missingIds = questionIds.filter(
+        (id) => !existingQuestions.some((q) => q.id == id)
+      );
+
       return response.status(404).json({
-        message: "Question not found.",
-        questionId: id,
+        message: "Some questions not found.",
+        missingQuestionIds: missingIds,
       });
     }
 
-    const affectedRows = await questionsModel.deleteQuestion(id);
+    // 3. Delete all questions
+    const affectedRows = await questionsModel.deleteQuestions(questionIds);
+
     return affectedRows > 0
-      ? response.status(200).send({ message: "Question has been deleted" })
+      ? response.status(200).send({
+          message: `${affectedRows} question(s) have been deleted`,
+          deletedCount: affectedRows,
+        })
       : response.status(409).send({ message: "No records deleted" });
   } catch (error) {
     response.status(500).send({
-      message: "Error while deleting.",
+      message: "Error while deleting questions.",
       details: error.message,
     });
   }
@@ -316,10 +330,38 @@ const insertAdmin = async (request, response) => {
   }
 };
 
+// const getUserAttemptsWithAnswers = async (request, response) => {
+//   const { user_id } = request.query;
+//   try {
+//     const result = await questionsModel.getUserAttemptsWithAnswers(user_id);
+//     return response.status(200).send({
+//       message: "Data fetched successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     response.status(500).send({
+//       message: "Error fetching attempts with answers",
+//       details: error.message,
+//     });
+//   }
+// };
+
 const getUserAttemptsWithAnswers = async (request, response) => {
-  const { user_id } = request.query;
+  const { user_ids } = request.body; // Expecting comma-separated IDs or array
+
   try {
-    const result = await questionsModel.getUserAttemptsWithAnswers(user_id);
+    // Convert to array if it's a string
+    const userIds = Array.isArray(user_ids) ? user_ids : user_ids.split(",");
+
+    // Validate input
+    if (!userIds || userIds.length === 0) {
+      return response.status(400).json({
+        message: "Please provide user IDs",
+        example: "?user_ids=1,2,3 or ?user_ids[]=1&user_ids[]=2",
+      });
+    }
+
+    const result = await questionsModel.getUsersAttemptsWithAnswers(userIds);
     return response.status(200).send({
       message: "Data fetched successfully",
       data: result,
