@@ -1,4 +1,5 @@
 const ffmpegPath = require("ffmpeg-static");
+// const ffmpegPath = "/usr/bin/ffmpeg"; // production
 const { spawn } = require("child_process");
 const path = require("path");
 
@@ -15,6 +16,8 @@ function compressVideo(inputPath, outputPath, crf = 28) {
       `${crf}`,
       "-acodec",
       "copy",
+      "-movflags",
+      "+faststart", // <== THIS is the key!
       outputPath,
     ]);
 
