@@ -113,7 +113,7 @@ router.post(
 );
 
 router.delete("/deleteTopic", verifyToken, CourseVideoController.deleteTopic);
-router.post(
+router.get(
   "/user-attempts",
   verifyToken,
   questionsController.getUserAttemptsWithAnswers
