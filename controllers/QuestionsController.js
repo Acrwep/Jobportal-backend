@@ -496,6 +496,23 @@ const getQuestionTypes = async (request, response) => {
   }
 };
 
+const getResults = async (request, response) => {
+  const { ids } = request.body;
+  try {
+    const questionIds = Array.isArray(ids) ? ids : ids.split(",");
+    const results = await questionsModel.getResults(questionIds);
+    response.status(200).send({
+      message: "Test results fetched successfully",
+      data: results,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: "Error fetching test results.",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getSections,
   getCourses,
@@ -514,4 +531,5 @@ module.exports = {
   checkTestCompleted,
   createQuestionType,
   getQuestionTypes,
+  getResults,
 };

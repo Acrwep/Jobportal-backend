@@ -758,6 +758,41 @@ const QuestionsModel = {
       throw new Error(error.message);
     }
   },
+
+  getResults: async (ids) => {
+    try {
+      const placeholders = ids.map(() => "?").join(",");
+      const query = `SELECT
+                        a.id,
+                        a.name,
+                        c.courseLocation AS branch,
+                        cr.name AS course_name,
+                        t.attempt_number,
+                        COUNT(u.question_id) AS total_questions,
+                        ROUND(((SUM(u.mark) / COUNT(u.question_id)) * 100), 0) AS percentage
+                    FROM
+                        test_attempts t
+                    INNER JOIN user_answers u ON
+                        t.attempt_number = u.attempt_number
+                    INNER JOIN admin a ON
+                        a.id = t.user_id
+                    INNER JOIN candidates c ON
+                        a.email = c.email
+                    INNER JOIN course cr ON
+                        c.course_id = cr.id
+                    WHERE a.id IN (${placeholders})
+                    GROUP BY
+                        a.id,
+                        a.name,
+                        c.courseLocation,
+                        cr.name,
+                        t.attempt_number`;
+      const [result] = await pool.query(query, ids);
+      return result;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
 };
 
 function getGrade(percentage) {

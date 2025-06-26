@@ -193,4 +193,6 @@ router.put(
   candidateController.updateCandidate
 );
 
+router.post("/getResults", verifyToken, questionsController.getResults);
+
 module.exports = router;
