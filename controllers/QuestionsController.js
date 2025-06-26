@@ -330,38 +330,10 @@ const insertAdmin = async (request, response) => {
   }
 };
 
-// const getUserAttemptsWithAnswers = async (request, response) => {
-//   const { user_id } = request.query;
-//   try {
-//     const result = await questionsModel.getUserAttemptsWithAnswers(user_id);
-//     return response.status(200).send({
-//       message: "Data fetched successfully",
-//       data: result,
-//     });
-//   } catch (error) {
-//     response.status(500).send({
-//       message: "Error fetching attempts with answers",
-//       details: error.message,
-//     });
-//   }
-// };
-
 const getUserAttemptsWithAnswers = async (request, response) => {
-  const { user_ids } = request.body; // Expecting comma-separated IDs or array
-
+  const { user_id } = request.query;
   try {
-    // Convert to array if it's a string
-    const userIds = Array.isArray(user_ids) ? user_ids : user_ids.split(",");
-
-    // Validate input
-    if (!userIds || userIds.length === 0) {
-      return response.status(400).json({
-        message: "Please provide user IDs",
-        example: "?user_ids=1,2,3 or ?user_ids[]=1&user_ids[]=2",
-      });
-    }
-
-    const result = await questionsModel.getUsersAttemptsWithAnswers(userIds);
+    const result = await questionsModel.getUserAttemptsWithAnswers(user_id);
     return response.status(200).send({
       message: "Data fetched successfully",
       data: result,
@@ -373,6 +345,34 @@ const getUserAttemptsWithAnswers = async (request, response) => {
     });
   }
 };
+
+// const getUserAttemptsWithAnswers = async (request, response) => {
+//   const { user_ids } = request.body; // Expecting comma-separated IDs or array
+
+//   try {
+//     // Convert to array if it's a string
+//     const userIds = Array.isArray(user_ids) ? user_ids : user_ids.split(",");
+
+//     // Validate input
+//     if (!userIds || userIds.length === 0) {
+//       return response.status(400).json({
+//         message: "Please provide user IDs",
+//         example: "?user_ids=1,2,3 or ?user_ids[]=1&user_ids[]=2",
+//       });
+//     }
+
+//     const result = await questionsModel.getUsersAttemptsWithAnswers(userIds);
+//     return response.status(200).send({
+//       message: "Data fetched successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     response.status(500).send({
+//       message: "Error fetching attempts with answers",
+//       details: error.message,
+//     });
+//   }
+// };
 
 const updateUser = async (request, response) => {
   const {
