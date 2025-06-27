@@ -772,7 +772,9 @@ const QuestionsModel = {
                         t.attempt_number,
                         COUNT(u.question_id) AS total_questions,
                         ROUND(((SUM(u.mark) / COUNT(u.question_id)) * 100), 0) AS percentage,
-                        t.attempt_date
+                        t.attempt_date,
+                        q.id AS question_type_id,
+                        q.name AS question_type
                     FROM
                         test_attempts t
                     INNER JOIN user_answers u ON
@@ -783,6 +785,8 @@ const QuestionsModel = {
                         a.email = c.email
                     INNER JOIN course cr ON
                         c.course_id = cr.id
+                    LEFT JOIN question_type q ON
+                        q.id = t.question_type_id
                     WHERE a.id IN (${placeholders})
                     GROUP BY
                         a.id,
@@ -790,7 +794,9 @@ const QuestionsModel = {
                         c.courseLocation,
                         cr.name,
                         t.attempt_number,
-                        t.attempt_date`;
+                        t.attempt_date,
+                        q.id,
+                        q.name`;
       const [result] = await pool.query(query, ids);
       return result;
     } catch (error) {
