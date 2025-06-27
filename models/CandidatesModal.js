@@ -375,7 +375,7 @@ const candidatesModal = {
                       WHERE
                           c.id = ?
                       GROUP BY
-                      ua.attempt_number, qt.name, ta.attempt_date
+                      ua.attempt_number, qt.name, ta.attempt_date, qt.name
                       ORDER BY
                           ua.attempt_number`;
 

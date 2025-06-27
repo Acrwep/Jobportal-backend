@@ -296,7 +296,13 @@ const QuestionsModel = {
     }
   },
 
-  insertUserAnswer: async (user_id, course_id, answers, assesmentLink) => {
+  insertUserAnswer: async (
+    user_id,
+    course_id,
+    answers,
+    assesmentLink,
+    question_type_id
+  ) => {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -308,8 +314,8 @@ const QuestionsModel = {
 
       // 2. Insert new attempt with incremented attempt_number
       const [attemptResult] = await connection.query(
-        "INSERT INTO test_attempts (user_id, course_id, attempt_number) VALUES (?, ?, ?)",
-        [user_id, course_id, nextAttempt]
+        "INSERT INTO test_attempts (user_id, course_id, question_type_id, attempt_number) VALUES (?, ?, ?, ?)",
+        [user_id, course_id, question_type_id, nextAttempt]
       );
 
       // Step 3: For each answer, get correct answer, compare, calculate mark
@@ -448,7 +454,7 @@ const QuestionsModel = {
     try {
       // 1. Get all attempts for the user
       const [attempts] = await pool.query(
-        "SELECT attempt_number, attempt_date FROM test_attempts WHERE user_id = ? ORDER BY attempt_number",
+        "SELECT t.attempt_number, t.attempt_date, q.id AS question_type_id, q.name AS question_type FROM test_attempts t LEFT JOIN question_type q ON t.question_type_id = q.id WHERE t.user_id = ? ORDER BY t.attempt_number",
         [user_id]
       );
 
@@ -465,15 +471,11 @@ const QuestionsModel = {
               q.option_a,
               q.option_b,
               q.option_c,
-              q.option_d,
-              qt.id AS question_type_id,
-              qt.name AS question_type
+              q.option_d
           FROM
               user_answers ua
           INNER JOIN questions q ON
             q.id = ua.question_id
-          LEFT JOIN question_type qt ON
-            q.question_type_id = qt.id
           WHERE
               ua.user_id = ? AND ua.attempt_number = ?`,
           [user_id, attempt.attempt_number]
@@ -504,8 +506,8 @@ const QuestionsModel = {
             question: answer.question,
             selected_option: answer.selected_option,
             correct_answer: answer.correct_answer,
-            question_type_id: answer.question_type_id,
-            question_type: answer.question_type,
+            // question_type_id: answer.question_type_id,
+            // question_type: answer.question_type,
             mark: answer.mark,
             section_id: answer.section_id,
             options: options,

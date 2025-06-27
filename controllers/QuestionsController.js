@@ -232,13 +232,15 @@ const deleteQuestion = async (request, response) => {
 };
 
 const insertUserAnswer = async (request, response) => {
-  const { course_id, user_id, answers, assesmentLink } = request.body;
+  const { course_id, user_id, answers, assesmentLink, question_type_id } =
+    request.body;
   try {
     const result = await questionsModel.insertUserAnswer(
       user_id,
       course_id,
       answers,
-      assesmentLink
+      assesmentLink,
+      question_type_id
     );
     return response
       .status(201)
