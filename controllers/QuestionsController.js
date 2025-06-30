@@ -516,9 +516,9 @@ const getResults = async (request, response) => {
 };
 
 const getDateWiseTest = async (request, response) => {
-  const { date } = request.query;
+  const { date, is_completed } = request.query;
   try {
-    const result = await questionsModel.getDateWiseTest(date);
+    const result = await questionsModel.getDateWiseTest(date, is_completed);
     response.status(200).send({
       message: "Test status fetched successfully",
       data: result,
