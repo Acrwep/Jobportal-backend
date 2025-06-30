@@ -368,6 +368,7 @@ const candidatesModal = {
                           a.id = ua.user_id
                       LEFT JOIN test_attempts ta ON
                           ua.attempt_number = ta.attempt_number
+                          AND ta.user_id = ua.user_id
                       LEFT JOIN questions q ON
                           ua.question_id = q.id
                       LEFT JOIN question_type qt ON
