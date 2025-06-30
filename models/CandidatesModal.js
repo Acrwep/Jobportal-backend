@@ -372,7 +372,7 @@ const candidatesModal = {
                       LEFT JOIN questions q ON
                           ua.question_id = q.id
                       LEFT JOIN question_type qt ON
-                          q.question_type_id = qt.id
+                          ta.question_type_id = qt.id
                       WHERE
                           c.id = ?
                       GROUP BY
