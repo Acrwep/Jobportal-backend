@@ -515,6 +515,22 @@ const getResults = async (request, response) => {
   }
 };
 
+const getDateWiseTest = async (request, response) => {
+  const { date } = request.query;
+  try {
+    const result = await questionsModel.getDateWiseTest(date);
+    response.status(200).send({
+      message: "Test status fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: "Error fetching test status.",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getSections,
   getCourses,
@@ -534,4 +550,5 @@ module.exports = {
   createQuestionType,
   getQuestionTypes,
   getResults,
+  getDateWiseTest,
 };

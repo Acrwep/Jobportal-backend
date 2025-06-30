@@ -194,5 +194,10 @@ router.put(
 );
 
 router.post("/getResults", verifyToken, questionsController.getResults);
+router.get(
+  "/getDateWiseTest",
+  verifyToken,
+  questionsController.getDateWiseTest
+);
 
 module.exports = router;
