@@ -770,15 +770,20 @@ const QuestionsModel = {
                         c.courseLocation AS branch,
                         cr.name AS course_name,
                         t.attempt_number,
-                        COUNT(u.question_id) AS total_questions,
-                        ROUND(((SUM(u.mark) / COUNT(u.question_id)) * 100), 0) AS percentage,
+                        COUNT(DISTINCT u.question_id) AS total_questions,
+                        ROUND(
+                            (
+                                (
+                                    SUM(u.mark) / COUNT(DISTINCT u.question_id)
+                                ) * 100
+                            ),
+                            0
+                        ) AS percentage,
                         t.attempt_date,
                         q.id AS question_type_id,
                         q.name AS question_type
                     FROM
                         test_attempts t
-                    INNER JOIN user_answers u ON
-                        t.attempt_number = u.attempt_number
                     INNER JOIN admin a ON
                         a.id = t.user_id
                     INNER JOIN candidates c ON
@@ -787,7 +792,11 @@ const QuestionsModel = {
                         c.course_id = cr.id
                     LEFT JOIN question_type q ON
                         q.id = t.question_type_id
-                    WHERE a.id IN (${placeholders})
+                    LEFT JOIN user_answers u ON
+                        t.attempt_number = u.attempt_number
+                        AND u.user_id = t.user_id  -- This is the critical join condition
+                    WHERE
+                        a.id IN(${placeholders})
                     GROUP BY
                         a.id,
                         a.name,
