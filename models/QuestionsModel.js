@@ -815,8 +815,35 @@ const QuestionsModel = {
 
   getDateWiseTest: async (date, is_completed) => {
     try {
-      const query = `SELECT A.name, A.email, L.name AS branch, C.name AS course_name, CASE WHEN AL.is_completed = 1 THEN 1 ELSE 0 END AS is_completed FROM assessment_link_log AS AL INNER JOIN admin A ON A.id = AL.user_id INNER JOIN location L ON A.location_id = L.id INNER JOIN course C ON C.id = A.course_id WHERE CAST(AL.created_date AS DATE) = ? AND AL.is_completed = ? ORDER BY A.name`;
-      const [result] = await pool.query(query, [date, is_completed]);
+      let query = `SELECT 
+                    A.name, 
+                    A.email, 
+                    L.name AS branch, 
+                    C.name AS course_name, 
+                    CASE WHEN AL.is_completed = 1 THEN 1 ELSE 0 END AS is_completed 
+                  FROM assessment_link_log AS AL 
+                  INNER JOIN admin A ON A.id = AL.user_id 
+                  INNER JOIN location L ON A.location_id = L.id 
+                  INNER JOIN course C ON C.id = A.course_id 
+                  WHERE 1=1`; // Starting with a true condition for easy WHERE clause building
+
+      const params = [];
+
+      // Add date filter if provided
+      if (date) {
+        query += ` AND CAST(AL.created_date AS DATE) = ?`;
+        params.push(date);
+      }
+
+      // Add is_completed filter if provided
+      if (is_completed !== undefined && is_completed !== null) {
+        query += ` AND AL.is_completed = ?`;
+        params.push(is_completed);
+      }
+
+      query += ` ORDER BY A.name`;
+
+      const [result] = await pool.query(query, params);
       return result;
     } catch (error) {
       throw new Error(error.message);
