@@ -440,12 +440,26 @@ const adminModal = {
     }
   },
 
-  createFolder: async (name, candidateIds, userId) => {
-    try {
-      const query = `INSERT INTO folders (name,candidateIds,userId) 
-    VALUES (?,?,?)`;
+  // createFolder: async (name, candidateIds, userId) => {
+  //   try {
+  //     const query = `INSERT INTO folders (name,candidateIds,userId)
+  //   VALUES (?,?,?)`;
 
-      const values = [name, JSON.stringify(candidateIds), userId];
+  //     const values = [name, JSON.stringify(candidateIds), userId];
+
+  //     const [result] = await pool.query(query, values);
+  //     return result;
+  //   } catch (error) {
+  //     throw new Error("Error inserting folders: " + error.message);
+  //   }
+  // },
+
+  createFolder: async (name, userId) => {
+    try {
+      const query = `INSERT INTO folders (name,userId) 
+    VALUES (?,?)`;
+
+      const values = [name, userId];
 
       const [result] = await pool.query(query, values);
       return result;
@@ -454,11 +468,11 @@ const adminModal = {
     }
   },
 
-  updateFolder: async (name, folderId) => {
+  updateFolder: async (name, candidateIds, folderId) => {
     try {
-      const query = `UPDATE folders SET name = ? WHERE id = ?`;
+      const query = `UPDATE folders SET name = ?, candidateIds = ? WHERE id = ?`;
 
-      const values = [name, folderId];
+      const values = [name, JSON.stringify(candidateIds), folderId];
 
       const [result] = await pool.query(query, values);
       return result;

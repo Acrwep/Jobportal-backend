@@ -242,15 +242,33 @@ const getFavoriteCandidates = async (request, response) => {
 };
 
 //folder api's
-const createFolder = async (request, response) => {
-  const { name, candidateIds, userId } = request.body;
+// const createFolder = async (request, response) => {
+//   const { name, candidateIds, userId } = request.body;
 
-  const formattedCandidateIds = Array.isArray(candidateIds)
-    ? candidateIds
-    : [candidateIds];
+//   const formattedCandidateIds = Array.isArray(candidateIds)
+//     ? candidateIds
+//     : [candidateIds];
+
+//   try {
+//     await adminModal.createFolder(name, formattedCandidateIds, userId);
+//     response.status(201).send({ message: "Folder created successful!" });
+//   } catch (error) {
+//     console.log("controller error", error);
+//     response
+//       .status(500)
+//       .send({ message: "error while create folder", details: error.message });
+//   }
+// };
+
+const createFolder = async (request, response) => {
+  const { name, userId } = request.body;
+
+  // const formattedCandidateIds = Array.isArray(candidateIds)
+  //   ? candidateIds
+  //   : [candidateIds];
 
   try {
-    await adminModal.createFolder(name, formattedCandidateIds, userId);
+    await adminModal.createFolder(name, userId);
     response.status(201).send({ message: "Folder created successful!" });
   } catch (error) {
     console.log("controller error", error);
@@ -261,10 +279,12 @@ const createFolder = async (request, response) => {
 };
 
 const updateFolder = async (request, response) => {
-  const { name, folderId } = request.body;
-
+  const { name, candidateIds, folderId } = request.body;
+  const formattedCandidateIds = Array.isArray(candidateIds)
+    ? candidateIds
+    : [candidateIds];
   try {
-    await adminModal.updateFolder(name, folderId);
+    await adminModal.updateFolder(name, formattedCandidateIds, folderId);
     response.status(201).send({ message: "Folder updated successful!" });
   } catch (error) {
     console.log("controller error", error);
