@@ -42,26 +42,44 @@ class CourseVideosController {
             "compressed-" + path.basename(originalPath)
           );
 
-          try {
-            await compressVideo(originalPath, compressedPath);
-            await fs.unlink(originalPath); // delete original
-            await fs.rename(compressedPath, originalPath); // move compressed to original name
-          } catch (err) {
-            return response.status(500).send({
-              message: "Video compression failed",
-              error: err.message,
-            });
-          }
-
+          // Prepare content data (save original path)
           contentDate = {
             type: "video",
             fileName: request.file.filename,
             originalname: request.file.originalname,
             size: fssync.statSync(originalPath).size,
             mimetype: request.file.mimetype,
-            path: `/uploads/course-videos/${request.file.filename}`,
+            path: `/uploads/course-videos/${request.file.filename}`, // public path (same)
           };
-          break;
+
+          // ✅ Save to DB immediately (show original)
+          const contentId = await CourseVideoModel.createContent(
+            course_id,
+            topic_id,
+            trainer_id,
+            title,
+            contentDate
+          );
+
+          // ✅ Respond to client (with original video path)
+          response.status(201).send({
+            message: "Video uploaded successfully",
+            data: {
+              contentId,
+              type: content_type,
+              path: contentDate.path, // original shown immediately
+            },
+          });
+
+          // ⏳ Compress in background, then replace original file
+          compressVideo(originalPath, compressedPath)
+            .then(() => fs.unlink(originalPath)) // delete original
+            .then(() => fs.rename(compressedPath, originalPath)) // replace with compressed
+            .catch((err) => {
+              console.error("Compression failed:", err.message);
+            });
+
+          return;
 
         case "youtube":
           if (!content_url) {
@@ -101,6 +119,7 @@ class CourseVideosController {
           return response.status(400).send({ message: "Invalid content type" });
       }
 
+      // This part will run only for non-video types
       const contentId = await CourseVideoModel.createContent(
         course_id,
         topic_id,
@@ -328,8 +347,9 @@ class CourseVideosController {
   static async uploadCompanyContent(request, response) {
     const { company_id, content_type, content_url, title, document } =
       request.body;
+
     try {
-      //Validate required fields
+      // Validate required fields
       if (!company_id || !content_type) {
         return response.status(400).send({
           message: "Missing required fields (company_id, content_type)",
@@ -337,6 +357,7 @@ class CourseVideosController {
       }
 
       let contentDate;
+
       switch (content_type) {
         case "video":
           if (!request.file) {
@@ -351,17 +372,7 @@ class CourseVideosController {
             "compressed-" + path.basename(originalPath)
           );
 
-          try {
-            await compressVideo(originalPath, compressedPath);
-            await fs.unlink(originalPath); // delete original
-            await fs.rename(compressedPath, originalPath); // move compressed to original name
-          } catch (err) {
-            return response.status(500).send({
-              message: "Video compression failed",
-              error: err.message,
-            });
-          }
-
+          // Prepare content data to show original immediately
           contentDate = {
             type: "video",
             fileName: request.file.filename,
@@ -370,7 +381,33 @@ class CourseVideosController {
             mimetype: request.file.mimetype,
             path: `/uploads/company-contents/${request.file.filename}`,
           };
-          break;
+
+          // Save to DB immediately
+          const videoContentId = await CourseVideoModel.uploadCompanyContent(
+            company_id,
+            title,
+            contentDate
+          );
+
+          // Respond immediately
+          response.status(201).send({
+            message: "Video uploaded successfully",
+            data: {
+              contentId: videoContentId,
+              type: content_type,
+              path: contentDate.path,
+            },
+          });
+
+          // Start compression in background
+          compressVideo(originalPath, compressedPath)
+            .then(() => fs.unlink(originalPath))
+            .then(() => fs.rename(compressedPath, originalPath))
+            .catch((err) => {
+              console.error("Video compression failed:", err.message);
+            });
+
+          return;
 
         case "youtube":
           if (!content_url) {
@@ -410,10 +447,11 @@ class CourseVideosController {
         default:
           return response.status(400).send({
             message:
-              "Invalid conetnt type (must be 'video', 'youtube', or 'document')",
+              "Invalid content type (must be 'video', 'youtube', or 'document')",
           });
       }
 
+      // For youtube and document types
       const contentId = await CourseVideoModel.uploadCompanyContent(
         company_id,
         title,
