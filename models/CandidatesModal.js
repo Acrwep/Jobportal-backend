@@ -679,6 +679,7 @@ const candidatesModal = {
                     a.course_join_date,
                     cr.name AS course_name,
                     cr.id AS course_id,
+                    c.mobile,
                     IFNULL(latest_email.sent_at, '') AS last_email_sent_date,
                     IFNULL(t.attempt_count, 0) AS attempt_number,
                     r.name AS role,
