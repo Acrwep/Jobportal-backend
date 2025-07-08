@@ -360,8 +360,8 @@ const QuestionsModel = {
 
       //Update test completed log in table
       const [updateLog] = await pool.query(
-        `UPDATE assessment_link_log SET is_completed = 1 WHERE test_link = ?`,
-        [assesmentLink]
+        `UPDATE assessment_link_log SET is_completed = 1, attempt_number = ? WHERE test_link = ?`,
+        [nextAttempt, assesmentLink]
       );
 
       await connection.commit();
@@ -794,7 +794,7 @@ const QuestionsModel = {
                         q.id = t.question_type_id
                     LEFT JOIN user_answers u ON
                         t.attempt_number = u.attempt_number
-                        AND u.user_id = t.user_id  -- This is the critical join condition
+                        AND u.user_id = t.user_id
                     WHERE
                         a.id IN(${placeholders})
                     GROUP BY
@@ -843,6 +843,82 @@ const QuestionsModel = {
       }
 
       query += ` ORDER BY A.name`;
+
+      const [result] = await pool.query(query, params);
+      return result;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  getFilterResults: async (ids, date) => {
+    try {
+      const placeholders = ids.map(() => "?").join(",");
+
+      // Base query without date condition
+      let query = `SELECT
+                      a.id,
+                      a.name,
+                      cd.courseLocation AS branch,
+                      c.name AS course_name,
+                      t.attempt_number,
+                      COUNT(DISTINCT u.question_id) AS total_questions,
+                      ROUND(
+                          (
+                              SUM(u.mark) / NULLIF(COUNT(DISTINCT u.question_id), 0) * 100
+                          ),
+                          0
+                      ) AS percentage,
+                      t.attempt_date,
+                      q.id AS question_type_id,
+                      q.name AS question_type,
+                      CASE 
+                          WHEN al.is_completed = 1 THEN 'Completed' 
+                          WHEN al.is_completed = 0 AND al.expires_at > NOW() THEN 'Pending' 
+                          WHEN al.expires_at <= NOW() THEN 'Expired' 
+                          ELSE 'Unknown'
+                      END AS status
+                  FROM
+                      assessment_link_log al
+                  INNER JOIN admin a ON
+                      al.user_id = a.id
+                  LEFT JOIN candidates cd ON
+                      a.email = cd.email
+                  LEFT JOIN course c ON
+                      c.id = cd.course_id
+                  LEFT JOIN test_attempts t ON
+                      t.attempt_number = al.attempt_number
+                      AND t.user_id = al.user_id
+                  LEFT JOIN user_answers u ON
+                      u.user_id = al.user_id
+                      AND t.attempt_number = u.attempt_number
+                  LEFT JOIN question_type q ON
+                      q.id = t.question_type_id
+                  WHERE
+                      al.user_id IN(${placeholders})`;
+
+      // Add date condition if provided
+      if (date) {
+        query += ` AND CAST(al.created_date AS DATE) = ?`;
+      }
+
+      query += ` GROUP BY
+                    a.id,
+                    a.name,
+                    cd.courseLocation,
+                    c.name,
+                    t.attempt_number,
+                    t.attempt_date,
+                    q.id,
+                    q.name,
+                    al.is_completed,
+                    al.expires_at`;
+
+      // Prepare parameters
+      const params = [...ids];
+      if (date) {
+        params.push(date);
+      }
 
       const [result] = await pool.query(query, params);
       return result;
