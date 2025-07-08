@@ -286,11 +286,19 @@ const updateEligibleCandidate = async (request, response) => {
 };
 
 const getUsers = async (request, response) => {
-  const { name, course_location, from_date, to_date, course_id, email } =
-    request.query;
+  const {
+    name,
+    mobile,
+    course_location,
+    from_date,
+    to_date,
+    course_id,
+    email,
+  } = request.query;
   try {
     const candidates = await candidatesModal.getUsers(
       name,
+      mobile,
       course_location,
       from_date,
       to_date,

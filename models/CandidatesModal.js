@@ -631,6 +631,7 @@ const candidatesModal = {
 
   getUsers: async (
     name,
+    mobile,
     course_location,
     from_date,
     to_date,
@@ -643,6 +644,11 @@ const candidatesModal = {
       if (name) {
         conditions.push("LOWER(a.name) LIKE ?");
         values.push(`%${name}%`);
+      }
+
+      if (mobile) {
+        conditions.push("LOWER(c.mobile) LIKE ?");
+        values.push(`%${mobile}%`);
       }
 
       if (course_location) {
@@ -661,8 +667,11 @@ const candidatesModal = {
       }
 
       if (email) {
-        conditions.push("a.email = ?");
-        values.push(email);
+        conditions.push("LOWER(a.email) LIKE ?");
+        values.push(`%${email}%`);
+
+        // conditions.push("a.email = ?");
+        // values.push(email);
       }
 
       // Always exclude Admin and Trainer roles
