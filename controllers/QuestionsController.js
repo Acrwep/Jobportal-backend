@@ -531,6 +531,23 @@ const getDateWiseTest = async (request, response) => {
   }
 };
 
+const getFilterResults = async (request, response) => {
+  const { ids, date } = request.body;
+  try {
+    const questionIds = Array.isArray(ids) ? ids : ids.split(",");
+    const results = await questionsModel.getFilterResults(questionIds, date);
+    response.status(200).send({
+      message: "Test results fetched successfully",
+      data: results,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: "Error fetching test results.",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getSections,
   getCourses,
@@ -551,4 +568,5 @@ module.exports = {
   getQuestionTypes,
   getResults,
   getDateWiseTest,
+  getFilterResults,
 };

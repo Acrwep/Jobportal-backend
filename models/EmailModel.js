@@ -34,6 +34,10 @@ async function sendTestLinks(users) {
         .add(24, "hour")
         .format("MMM DD, YYYY, h:mm A");
 
+      const expires_at = moment(today)
+        .add(24, "hour")
+        .format("YYYY-MM-DD HH:mm:ss");
+
       try {
         // 2. Send email
         await transporter.sendMail({
@@ -87,11 +91,13 @@ async function sendTestLinks(users) {
            VALUES (?, ?, 'sent', ?, ?)`,
           [recipientEmail, "Your Test Invitation", user.id, user.course_id]
         );
+        console.log("eee", expires_at);
 
-        const query = `INSERT INTO assessment_link_log(user_id, test_link, status, created_date) VALUES (?, ?, ?, ?)`;
+        const query = `INSERT INTO assessment_link_log(user_id, test_link, expires_at, status, created_date) VALUES (?, ?, ?, ?, ?)`;
         const [result] = await pool.query(query, [
           user.id,
           testLink,
+          expires_at,
           "New",
           user.created_date,
         ]);

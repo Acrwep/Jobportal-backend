@@ -200,4 +200,10 @@ router.get(
   questionsController.getDateWiseTest
 );
 
+router.post(
+  "/getFilterResults",
+  verifyToken,
+  questionsController.getFilterResults
+);
+
 module.exports = router;
