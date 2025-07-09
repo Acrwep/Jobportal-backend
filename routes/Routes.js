@@ -206,4 +206,6 @@ router.post(
   questionsController.getFilterResults
 );
 
+router.get("/getUserAnswers", verifyToken, questionsController.getUserAnswers);
+
 module.exports = router;

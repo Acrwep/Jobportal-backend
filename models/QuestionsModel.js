@@ -527,124 +527,6 @@ const QuestionsModel = {
     }
   },
 
-  // getUsersAttemptsWithAnswers: async (userIds) => {
-  //   try {
-  //     // Create placeholders for the IN clause
-  //     const placeholders = userIds.map(() => "?").join(",");
-
-  //     // 1. Get all attempts for all users
-  //     const [allAttempts] = await pool.query(
-  //       `SELECT
-  //         user_id,
-  //         attempt_number,
-  //         attempt_date
-  //       FROM test_attempts
-  //       WHERE user_id IN (${placeholders})
-  //       ORDER BY user_id, attempt_number`,
-  //       userIds
-  //     );
-
-  //     // 2. Get all answers for all users in one query
-  //     const [allAnswers] = await pool.query(
-  //       `SELECT
-  //           ua.user_id,
-  //           ua.attempt_number,
-  //           ua.question_id,
-  //           q.question,
-  //           ua.selected_option,
-  //           ua.mark,
-  //           q.section_id,
-  //           q.correct_answer,
-  //           q.option_a,
-  //           q.option_b,
-  //           q.option_c,
-  //           q.option_d,
-  //           qt.id AS question_type_id,
-  //           qt.name AS question_type
-  //       FROM
-  //           user_answers ua
-  //       INNER JOIN questions q ON
-  //         q.id = ua.question_id
-  //       LEFT JOIN question_type qt ON
-  //         q.question_type_id = qt.id
-  //       WHERE
-  //           ua.user_id IN (${placeholders})`,
-  //       [...userIds, ...userIds] // Duplicated for both queries
-  //     );
-
-  //     // 3. Organize data by user and attempt
-  //     const usersData = {};
-
-  //     // Initialize user structure
-  //     userIds.forEach((id) => {
-  //       usersData[id] = {
-  //         user_id: parseInt(id),
-  //         attempts: [],
-  //       };
-  //     });
-
-  //     // Process attempts
-  //     allAttempts.forEach((attempt) => {
-  //       if (!usersData[attempt.user_id]) return;
-
-  //       const userAnswers = allAnswers.filter(
-  //         (a) =>
-  //           a.user_id === attempt.user_id &&
-  //           a.attempt_number === attempt.attempt_number
-  //       );
-
-  //       const totalQuestions = userAnswers.length;
-  //       const correctAnswers = userAnswers.filter((a) => a.mark === 1).length;
-  //       const percentage =
-  //         totalQuestions > 0
-  //           ? Math.round((correctAnswers / totalQuestions) * 100)
-  //           : 0;
-
-  //       // Transform answers
-  //       const transformedAnswers = userAnswers.map((answer) => {
-  //         const options = [];
-  //         if (answer.option_a)
-  //           options.push({ name: "option_a", value: answer.option_a });
-  //         if (answer.option_b)
-  //           options.push({ name: "option_b", value: answer.option_b });
-  //         if (answer.option_c)
-  //           options.push({ name: "option_c", value: answer.option_c });
-  //         if (answer.option_d)
-  //           options.push({ name: "option_d", value: answer.option_d });
-
-  //         return {
-  //           question_id: answer.question_id,
-  //           question: answer.question,
-  //           selected_option: answer.selected_option,
-  //           correct_answer: answer.correct_answer,
-  //           question_type_id: answer.question_type_id,
-  //           question_type: answer.question_type,
-  //           mark: answer.mark,
-  //           section_id: answer.section_id,
-  //           options: options,
-  //         };
-  //       });
-
-  //       usersData[attempt.user_id].attempts.push({
-  //         attempt_number: attempt.attempt_number,
-  //         attempt_date: attempt.attempt_date,
-  //         total_questions: totalQuestions,
-  //         correct_answers: correctAnswers,
-  //         percentage: percentage,
-  //         grade: getGrade(percentage),
-  //         answers: transformedAnswers,
-  //       });
-  //     });
-
-  //     // Convert to array and filter out users with no attempts
-  //     return Object.values(usersData).filter(
-  //       (user) => user.attempts.length > 0
-  //     );
-  //   } catch (error) {
-  //     throw new Error("Error getting users' questions: " + error.message);
-  //   }
-  // },
-
   updateUser: async (
     id,
     name,
@@ -813,7 +695,7 @@ const QuestionsModel = {
     }
   },
 
-  getDateWiseTest: async (date, is_completed) => {
+  getDateWiseTest: async (date, is_completed, branch_id, course_id) => {
     try {
       let query = `SELECT 
                     A.id,
@@ -840,6 +722,17 @@ const QuestionsModel = {
       if (is_completed !== undefined && is_completed !== null) {
         query += ` AND AL.is_completed = ?`;
         params.push(is_completed);
+      }
+
+      // Add branch filter if provided
+      if (branch_id) {
+        query += ` AND L.id = ?`;
+        params.push(branch_id);
+      }
+
+      if (course_id) {
+        query += ` AND C.id = ?`;
+        params.push(course_id);
       }
 
       query += ` ORDER BY A.name`;
@@ -876,7 +769,7 @@ const QuestionsModel = {
                           WHEN al.is_completed = 1 THEN 'Completed' 
                           WHEN al.is_completed = 0 AND al.expires_at > NOW() THEN 'Pending' 
                           WHEN al.expires_at <= NOW() THEN 'Expired' 
-                          ELSE 'Unknown'
+                          ELSE ''
                       END AS status
                   FROM
                       assessment_link_log al
@@ -924,6 +817,83 @@ const QuestionsModel = {
       return result;
     } catch (error) {
       throw new Error(error.message);
+    }
+  },
+
+  getUserAnswers: async (user_id, date) => {
+    try {
+      // 1. Get all attempts for the user
+      const [attempts] = await pool.query(
+        "SELECT al.attempt_number, t.attempt_date, q.id AS question_type_id, q.name AS question_type FROM assessment_link_log al LEFT JOIN test_attempts t ON al.user_id = t.user_id AND al.attempt_number = t.attempt_number LEFT JOIN question_type q ON t.question_type_id = q.id WHERE al.user_id = ? AND cast(al.created_date AS date) = ? AND al.attempt_number IS NOT NULL",
+        [user_id, date]
+      );
+
+      // 2. Loop through attempts to get answers and calculate stats
+      for (const attempt of attempts) {
+        const [answers] = await pool.query(
+          `SELECT
+              ua.question_id,
+              q.question,
+              ua.selected_option,
+              ua.mark,
+              q.section_id,
+              q.correct_answer,
+              q.option_a,
+              q.option_b,
+              q.option_c,
+              q.option_d
+          FROM
+              user_answers ua
+          INNER JOIN questions q ON
+            q.id = ua.question_id
+          WHERE
+              ua.user_id = ? AND ua.attempt_number = ?`,
+          [user_id, attempt.attempt_number]
+        );
+
+        const totalQuestions = answers.length;
+        const correctAnswers = answers.filter((a) => a.mark === 1).length;
+        const percentage =
+          totalQuestions > 0
+            ? Math.round((correctAnswers / totalQuestions) * 100)
+            : 0;
+
+        // Transform answers to include options array
+        const transformedAnswers = answers.map((answer) => {
+          // Create options array in the desired format
+          const options = [];
+          if (answer.option_a)
+            options.push({ name: "option_a", value: answer.option_a });
+          if (answer.option_b)
+            options.push({ name: "option_b", value: answer.option_b });
+          if (answer.option_c)
+            options.push({ name: "option_c", value: answer.option_c });
+          if (answer.option_d)
+            options.push({ name: "option_d", value: answer.option_d });
+
+          return {
+            question_id: answer.question_id,
+            question: answer.question,
+            selected_option: answer.selected_option,
+            correct_answer: answer.correct_answer,
+            // question_type_id: answer.question_type_id,
+            // question_type: answer.question_type,
+            mark: answer.mark,
+            section_id: answer.section_id,
+            options: options,
+          };
+        });
+
+        attempt.total_questions = totalQuestions;
+        attempt.correct_answers = correctAnswers;
+        attempt.percentage = percentage;
+        attempt.grade = getGrade(percentage);
+        attempt.answers = transformedAnswers;
+      }
+
+      return attempts;
+    } catch (error) {
+      throw new Error("Error getting candidate questions: " + error.message);
     }
   },
 };
