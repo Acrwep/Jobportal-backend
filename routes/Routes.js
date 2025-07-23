@@ -207,5 +207,5 @@ router.post(
 );
 
 router.get("/getUserAnswers", verifyToken, questionsController.getUserAnswers);
-
+router.post("/tempTestLink", verifyToken, questionsController.tempTestLink);
 module.exports = router;

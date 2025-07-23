@@ -91,7 +91,6 @@ async function sendTestLinks(users) {
            VALUES (?, ?, 'sent', ?, ?)`,
           [recipientEmail, "Your Test Invitation", user.id, user.course_id]
         );
-        console.log("eee", expires_at);
 
         const query = `INSERT INTO assessment_link_log(user_id, test_link, expires_at, status, created_date) VALUES (?, ?, ?, ?, ?)`;
         const [result] = await pool.query(query, [

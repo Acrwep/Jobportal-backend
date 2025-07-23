@@ -543,6 +543,26 @@ const getUserAnswers = async (request, response) => {
   }
 };
 
+const tempTestLink = async (request, response) => {
+  const { users, schedule_date, schedule_time } = request.body;
+  try {
+    const result = await questionsModel.tempTestLink(
+      users,
+      schedule_date,
+      schedule_time
+    );
+    return response.status(201).send({
+      message: "Inserted successfully",
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while inserting",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getSections,
   getCourses,
@@ -565,4 +585,5 @@ module.exports = {
   getDateWiseTest,
   getFilterResults,
   getUserAnswers,
+  tempTestLink,
 };

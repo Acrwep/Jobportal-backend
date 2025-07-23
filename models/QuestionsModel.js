@@ -896,6 +896,24 @@ const QuestionsModel = {
       throw new Error("Error getting candidate questions: " + error.message);
     }
   },
+
+  tempTestLink: async (users, schedule_date, schedule_time) => {
+    try {
+      const insertQuery = `INSERT INTO temp_test_link (user_id, question_type_id, schedule_date, schedule_time) VALUES ?`;
+
+      const values = users.map((q) => [
+        q.user_id,
+        q.question_type_id,
+        schedule_date,
+        schedule_time,
+      ]);
+
+      const [result] = await pool.query(insertQuery, [values]);
+      return result.affectedRows;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
 };
 
 function getGrade(percentage) {

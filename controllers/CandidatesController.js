@@ -1,5 +1,4 @@
 const { request, response } = require("express");
-const pool = require("../config/dbConfig");
 const candidatesModal = require("../models/CandidatesModal");
 
 const registerCandidate = async (request, response) => {
