@@ -1,5 +1,6 @@
 const { response, request } = require("express");
 const questionsModel = require("../models/QuestionsModel");
+const pool = require("../config/dbConfig");
 
 const getSections = async (request, response) => {
   try {
@@ -157,10 +158,11 @@ const updateQuestion = async (request, response) => {
   } = request.body;
   try {
     // 1. First check if the question already exists
-    const existingQuestion = await questionsModel.findQuestionExists(id);
+    const query = `SELECT * FROM questions WHERE id = ?`;
+    const [existingQuestion] = await pool.query(query, id);
 
     // 2. If not exists, return a 409 Conflict response
-    if (!existingQuestion) {
+    if (existingQuestion.length <= 0) {
       return response.status(404).json({
         message: "Question not found.",
         questionId: id,
