@@ -3,7 +3,7 @@ const emailModal = require("../models/EmailModel");
 const pool = require("../config/dbConfig");
 const moment = require("moment");
 
-let scheduleTime = "*/1 * * * *"; // Schedule: Runs every 30 minutes
+let scheduleTime = "*/30 * * * *"; // Schedule: Runs every 30 minutes
 // // let scheduleTime = "0 * * * *"; // Schedule: Runs every hour
 // // let scheduleTime = "0 10 * * *"; // Schedule: Runs every day at 10:00 AM
 // // let scheduleTime = "0 0 * * 0"; // Schedule: Runs every Sunday at midnight
@@ -16,24 +16,39 @@ const job = cron.schedule(scheduleTime, async () => {
     const date = now.format("yyyy-MM-DD");
     const time = now.format("HH:mm:ss");
 
-    console.log("date", date, "time", time);
     const [getUsers] = await pool.query(
       `SELECT id, user_id, question_type_id, course_id FROM temp_test_link WHERE schedule_date = ? AND schedule_time = ? AND is_sent = 0`,
       [date, time]
     );
 
     if (getUsers.length > 0) {
-      const updateData = getUsers.map((item) => {
-        return {
-          ...item,
-          id: item.user_id,
-          created_date: now.format("YYYY-MM-DD HH:mm:ss"),
-        };
-      });
-      await emailModal.sendTestLinks(updateData);
-    }
+      try {
+        // Process updates and prepare data for email
+        const processedUsers = await Promise.all(
+          getUsers.map(async (item) => {
+            // Update the record in database
+            await pool.query(
+              `UPDATE temp_test_link SET is_sent = 1 WHERE id = ?`,
+              [item.id] // Note: added array brackets for parameterized query
+            );
 
-    console.log("⏰ Scheduled task running at:", new Date().toLocaleString());
+            // Return the transformed data for email
+            return {
+              id: item.user_id,
+              course_id: item.course_id,
+              question_type_id: item.question_type_id,
+              created_date: moment().format("YYYY-MM-DD HH:mm:ss"),
+            };
+          })
+        );
+
+        // Send emails with the processed user data
+        await emailModal.sendTestLinks(processedUsers);
+      } catch (error) {
+        console.error("Error processing users:", error);
+        throw error; // Or handle it differently
+      }
+    }
   } catch (error) {
     throw new Error(error.message);
   }
