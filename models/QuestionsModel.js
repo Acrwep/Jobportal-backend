@@ -897,19 +897,70 @@ const QuestionsModel = {
     }
   },
 
-  tempTestLink: async (users, schedule_date, schedule_time) => {
+  tempTestLink: async (
+    users,
+    schedule_date,
+    schedule_time,
+    question_type_id,
+    course_id,
+    name,
+    total_users
+  ) => {
     try {
-      const insertQuery = `INSERT INTO temp_test_link (user_id, question_type_id, schedule_date, schedule_time) VALUES ?`;
-
-      const values = users.map((q) => [
-        q.user_id,
-        q.question_type_id,
+      const insertMaster = `INSERT INTO temp_test_link_master (question_type_id, course_id, name, schedule_date, schedule_time, total_users) VALUES (?, ?, ?, ?, ?, ?)`;
+      const [masterResult] = await pool.query(insertMaster, [
+        question_type_id,
+        course_id,
+        name,
         schedule_date,
         schedule_time,
+        total_users,
       ]);
+      const insertQuery = `INSERT INTO temp_test_link_trans (temp_master_id, user_id) VALUES ?`;
+
+      const values = users.map((q) => [masterResult.insertId, q.user_id]);
 
       const [result] = await pool.query(insertQuery, [values]);
       return result.affectedRows;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  getScheduledTests: async () => {
+    try {
+      const [getTests] = await pool.query(
+        `SELECT id, course_id, name, question_type_id, schedule_date, schedule_time, total_users FROM temp_test_link_master`
+      );
+      return getTests;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  deleteSchedule: async (id) => {
+    try {
+      const [isIdExists] = await pool.query(
+        `SELECT id FROM temp_test_link_master WHERE id = ?`,
+        id
+      );
+      if (isIdExists.length <= 0) {
+        throw new Error("Invalid Id");
+      }
+      let affectedRows = 0;
+      const [deleteMaster] = await pool.query(
+        `DELETE FROM temp_test_link_master WHERE id = ?`,
+        id
+      );
+      affectedRows += deleteMaster.affectedRows;
+
+      const [deleteTrans] = await pool.query(
+        `DELETE FROM temp_test_link_trans WHERE temp_master_id = ?`,
+        id
+      );
+      affectedRows += deleteTrans.affectedRows;
+
+      return affectedRows;
     } catch (error) {
       throw new Error(error.message);
     }

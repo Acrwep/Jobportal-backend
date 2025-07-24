@@ -208,4 +208,14 @@ router.post(
 
 router.get("/getUserAnswers", verifyToken, questionsController.getUserAnswers);
 router.post("/tempTestLink", verifyToken, questionsController.tempTestLink);
+router.get(
+  "/getScheduledTests",
+  verifyToken,
+  questionsController.getScheduledTests
+);
+router.delete(
+  "/deleteSchedule",
+  verifyToken,
+  questionsController.deleteSchedule
+);
 module.exports = router;

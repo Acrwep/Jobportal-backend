@@ -17,7 +17,7 @@ const job = cron.schedule(scheduleTime, async () => {
     const time = now.format("HH:mm:ss");
 
     const [getUsers] = await pool.query(
-      `SELECT id, user_id, question_type_id, course_id FROM temp_test_link WHERE schedule_date = ? AND schedule_time = ? AND is_sent = 0`,
+      `SELECT tt.id, tt.user_id, tm.question_type_id, tm.course_id FROM temp_test_link_master AS tm INNER JOIN temp_test_link_trans AS tt ON tm.id = tt.temp_master_id WHERE tm.schedule_date = ? AND tm.schedule_time = ? AND tt.is_sent = 0`,
       [date, time]
     );
 
@@ -28,7 +28,7 @@ const job = cron.schedule(scheduleTime, async () => {
           getUsers.map(async (item) => {
             // Update the record in database
             await pool.query(
-              `UPDATE temp_test_link SET is_sent = 1 WHERE id = ?`,
+              `UPDATE temp_test_link_trans SET is_sent = 1 WHERE id = ?`,
               [item.id] // Note: added array brackets for parameterized query
             );
 

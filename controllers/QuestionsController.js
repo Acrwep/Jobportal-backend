@@ -544,12 +544,31 @@ const getUserAnswers = async (request, response) => {
 };
 
 const tempTestLink = async (request, response) => {
-  const { users, schedule_date, schedule_time } = request.body;
+  const {
+    users,
+    schedule_date,
+    schedule_time,
+    question_type_id,
+    course_id,
+    name,
+    total_users,
+  } = request.body;
+  const formattedUsers = Array.isArray(users) ? users : [users];
+  if (formattedUsers.length <= 0) {
+    return response.status(500).send({
+      message: "Candidates should not be empty",
+    });
+  }
+
   try {
     const result = await questionsModel.tempTestLink(
       users,
       schedule_date,
-      schedule_time
+      schedule_time,
+      question_type_id,
+      course_id,
+      name,
+      total_users
     );
     return response.status(201).send({
       message: "Inserted successfully",
@@ -558,6 +577,37 @@ const tempTestLink = async (request, response) => {
   } catch (error) {
     response.status(500).send({
       message: "Error while inserting",
+      details: error.message,
+    });
+  }
+};
+
+const getScheduledTests = async (request, response) => {
+  try {
+    const getTests = await questionsModel.getScheduledTests();
+    return response.status(200).send({
+      message: "Data fetched successfully",
+      data: getTests,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while fetching data",
+      details: error.message,
+    });
+  }
+};
+
+const deleteSchedule = async (request, response) => {
+  const { id } = request.query;
+  try {
+    const result = await questionsModel.deleteSchedule(id);
+    return response.status(200).send({
+      message: "Schedule has been deleted",
+      data: result,
+    });
+  } catch (error) {
+    response.status(500).send({
+      message: "Error while deleting schedule",
       details: error.message,
     });
   }
@@ -586,4 +636,6 @@ module.exports = {
   getFilterResults,
   getUserAnswers,
   tempTestLink,
+  getScheduledTests,
+  deleteSchedule,
 };
