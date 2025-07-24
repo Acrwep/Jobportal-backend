@@ -549,7 +549,6 @@ const tempTestLink = async (request, response) => {
     schedule_date,
     schedule_time,
     question_type_id,
-    course_id,
     name,
     total_users,
   } = request.body;
@@ -562,11 +561,10 @@ const tempTestLink = async (request, response) => {
 
   try {
     const result = await questionsModel.tempTestLink(
-      users,
+      formattedUsers,
       schedule_date,
       schedule_time,
       question_type_id,
-      course_id,
       name,
       total_users
     );

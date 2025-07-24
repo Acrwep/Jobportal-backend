@@ -902,23 +902,25 @@ const QuestionsModel = {
     schedule_date,
     schedule_time,
     question_type_id,
-    course_id,
     name,
     total_users
   ) => {
     try {
-      const insertMaster = `INSERT INTO temp_test_link_master (question_type_id, course_id, name, schedule_date, schedule_time, total_users) VALUES (?, ?, ?, ?, ?, ?)`;
+      const insertMaster = `INSERT INTO temp_test_link_master (question_type_id, name, schedule_date, schedule_time, total_users) VALUES (?, ?, ?, ?, ?)`;
       const [masterResult] = await pool.query(insertMaster, [
         question_type_id,
-        course_id,
         name,
         schedule_date,
         schedule_time,
         total_users,
       ]);
-      const insertQuery = `INSERT INTO temp_test_link_trans (temp_master_id, user_id) VALUES ?`;
+      const insertQuery = `INSERT INTO temp_test_link_trans (temp_master_id, user_id, course_id) VALUES ?`;
 
-      const values = users.map((q) => [masterResult.insertId, q.user_id]);
+      const values = users.map((q) => [
+        masterResult.insertId,
+        q.user_id,
+        q.course_id,
+      ]);
 
       const [result] = await pool.query(insertQuery, [values]);
       return result.affectedRows;
@@ -930,7 +932,7 @@ const QuestionsModel = {
   getScheduledTests: async () => {
     try {
       const [getTests] = await pool.query(
-        `SELECT id, course_id, name, question_type_id, schedule_date, schedule_time, total_users FROM temp_test_link_master`
+        `SELECT id, name, question_type_id, schedule_date, schedule_time, total_users FROM temp_test_link_master`
       );
       return getTests;
     } catch (error) {
