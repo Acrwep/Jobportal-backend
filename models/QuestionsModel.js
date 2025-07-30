@@ -699,7 +699,7 @@ const QuestionsModel = {
     try {
       let query = `SELECT 
                     A.id AS user_id,
-                    AL.id AS assessment_log_id,
+                    AL.id,
                     A.name, 
                     A.email, 
                     L.name AS branch, 
