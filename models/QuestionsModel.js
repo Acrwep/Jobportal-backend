@@ -698,7 +698,8 @@ const QuestionsModel = {
   getDateWiseTest: async (date, is_completed, branch_id, course_id) => {
     try {
       let query = `SELECT 
-                    A.id,
+                    A.id AS user_id,
+                    AL.id AS assessment_log_id,
                     A.name, 
                     A.email, 
                     L.name AS branch, 
